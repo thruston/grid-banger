@@ -1,10 +1,14 @@
-# A class to implement OSGB reformatting and conversion
-#
-# OSGB_Grid_Point represents a location on a map in Great Britain 
-# The constructor allows grid references in various forms, 
-# including OSGB lat/lon and WGS84 lat/lon (and later possibly place names...)
-#
-# Toby Thurston -- 15 May 2014 
+# coding=utf-8
+
+"""
+ A class to implement OSGB reformatting and conversion
+
+ OSGB_Grid_Point represents a location on a map in Great Britain 
+ The constructor allows grid references in various forms, 
+ including OSGB lat/lon and WGS84 lat/lon (and later possibly place names...)
+
+ Toby Thurston -- 15 May 2014 
+"""
 
 import math
 import re
@@ -282,22 +286,23 @@ def _ll_to_grid(lat,lon):
     CONVERGENCE_FACTOR = 0.9996012717
 
     (a,b) = (OSGB_MAJOR_AXIS,OSGB_MINOR_AXIS)
+    n = (a-b)/(a+b)
+    
+    sin_lat = math.sin(math.radians(lat))
+    cos_lat = math.cos(math.radians(lat))
+    sin_lon = math.sin(math.radians(lon))
+    cos_lon = math.cos(math.radians(lon))
+    tan_lat = sin_lat / cos_lat
+    tan2_lat = tan_lat * tan_lat
+    tan4_lat = tan2_lat * tan2_lat
 
-    phi = lat * math.pi / 180
-    cp = math.cos(phi)
-    sp = math.sin(phi)
-    tp = math.tan(phi)
-    tp2 = tp*tp
-    tp4 = tp2*tp2
-
-    ecc = math.sqrt(1 - (sp-sp*b/a)*(sp+sp*b/a))
+    ecc = math.sqrt(1 - (sin_lat-sin_lat*b/a)*(sin_lat+sin_lat*b/a))
     nu   = CONVERGENCE_FACTOR * a / ecc
     rho  = CONVERGENCE_FACTOR * b**2 / a * ecc**3
     eta2 = nu/rho - 1
 
-    phi_plus  = (lat + ORIGIN_LATITUDE) * math.pi / 180
-    phi_minus = (lat - ORIGIN_LATITUDE) * math.pi / 180
-    n = (a-b)/(a+b)
+    phi_plus  = math.radians(lat + ORIGIN_LATITUDE)
+    phi_minus = math.radians(lat - ORIGIN_LATITUDE)
 
     M = CONVERGENCE_FACTOR * b * ( (1 + n * (1 + 5/4*n*(1 + n)))*phi_minus
          - 3*n*(1+n*(1+7/8*n))  * math.sin(  phi_minus) * math.cos(  phi_plus)
@@ -305,17 +310,17 @@ def _ll_to_grid(lat,lon):
          - 35/24*n**3           * math.sin(3*phi_minus) * math.cos(3*phi_plus)
            )
 
-    I   = nu/2  * sp * cp
-    II  = nu/24 * sp * cp**3 * (5-tp2+9*eta2)
-    III = nu/720* sp * cp**5 *(61-58*tp2+tp4)
+    I   = nu/2   * sin_lat * cos_lat
+    II  = nu/24  * sin_lat * cos_lat**3 * (5 - tan2_lat + 9*eta2)
+    III = nu/720 * sin_lat * cos_lat**5 * (61 - 58*tan2_lat + tan4_lat)
 
-    IV  = nu*cp
-    V   = nu/6   * cp**3 * (nu/rho-tp2)
-    VI  = nu/120 * cp**5 * (5-18*tp2+tp4+14*eta2-58*tp2*eta2)
+    IV  = nu*cos_lat
+    V   = nu/6   * cos_lat**3 * (nu/rho - tan2_lat)
+    VI  = nu/120 * cos_lat**5 * (5 - 18*tan2_lat + tan4_lat + 14*eta2 - 58*tan2_lat*eta2)
 
-    λ = (lon - ORIGIN_LONGITUDE) * math.pi / 180
-    north = ORIGIN_NORTHING + M +  I*λ**2 + II*λ**4 + III*λ**6
-    east  = ORIGIN_EASTING      + IV*λ    +  V*λ**3 +  VI*λ**5
+    lam = math.radians(lon - ORIGIN_LONGITUDE)
+    north = ORIGIN_NORTHING + M +  I*lam**2 + II*lam**4 + III*lam**6
+    east  = ORIGIN_EASTING      + IV*lam    +  V*lam**3 +  VI*lam**5
     return (east, north)
 
 def _shift_ll_from_wgs84(lat,lon,elevation=0):
@@ -356,10 +361,10 @@ def _shift_ll_into_WGS84(lat,lon,elevation=0):
 
 def _transform(lat, lon, elev, from_a, from_f, da, df, dx, dy, dz):
 
-    sin_lat = math.sin( lat * math.pi/180 )
-    cos_lat = math.cos( lat * math.pi/180 )
-    sin_lon = math.sin( lon * math.pi/180 )
-    cos_lon = math.cos( lon * math.pi/180 )
+    sin_lat = math.sin(math.radians(lat))
+    cos_lat = math.cos(math.radians(lat))
+    sin_lon = math.sin(math.radians(lon))
+    cos_lon = math.cos(math.radians(lon))
 
     b_a      = 1 - from_f
     e_sq     = from_f * (2-from_f)
@@ -369,17 +374,15 @@ def _transform(lat, lon, elev, from_a, from_f, da, df, dx, dy, dz):
     rn       = from_a / secc
     rm       = from_a * (1-e_sq) / (ecc*secc)
 
-    d_lat = ( - dx*sin_lat*cos_lon
+    d_lat = math.degrees( ( - dx*sin_lat*cos_lon
               - dy*sin_lat*sin_lon
               + dz*cos_lat
               + da*(rn*e_sq*sin_lat*cos_lat)/from_a
               + df*(rm/b_a + rn*b_a)*sin_lat*cos_lat
-            ) / (rm + elev)
+            ) / (rm + elev) )
 
 
-    d_lon = ( - dx*sin_lon
-              + dy*cos_lon
-            ) / ((rn+elev)*cos_lat)
+    d_lon = math.degrees( ( - dx*sin_lon + dy*cos_lon) / ((rn+elev)*cos_lat) )
 
     d_elev = ( dx*cos_lat*cos_lon
              + dy*cos_lat*sin_lon
@@ -387,7 +390,7 @@ def _transform(lat, lon, elev, from_a, from_f, da, df, dx, dy, dz):
              - da*from_a/rn
              + df*b_a*rn*sin_lat*sin_lat )
 
-    (new_lat, new_lon, new_elev) = ( lat + d_lat * 180/math.pi, lon + d_lon * 180/math.pi, elev + d_elev)
+    (new_lat, new_lon, new_elev) = ( lat + d_lat, lon + d_lon, elev + d_elev)
 
     return (new_lat, new_lon, new_elev)
 
