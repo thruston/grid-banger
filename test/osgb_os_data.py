@@ -57,7 +57,7 @@ def as_mm(degrees, grat):
 
 errors = []
 for k in sorted(test_input):
-    (gote, gotn) = osgb.from_latlon(test_input[k]['lat'], test_input[k]['lon'])
+    (gote, gotn) = osgb.ll_to_grid(test_input[k]['lat'], test_input[k]['lon'])
     diffe = gote - test_input[k]['e']
     diffn = gotn - test_input[k]['n']
 
@@ -66,7 +66,7 @@ for k in sorted(test_input):
     if abs(diffn) > 0.0005:
         errors.append( (k, "Northing", diffn) )
 
-    (gotlat, gotlon) = osgb.to_latlon(test_input[k]['e'], test_input[k]['n'])
+    (gotlat, gotlon) = osgb.grid_to_ll(test_input[k]['e'], test_input[k]['n'])
     difflat = gotlat - test_input[k]['lat']
     difflon = gotlon - test_input[k]['lon']
 

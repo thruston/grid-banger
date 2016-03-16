@@ -6,7 +6,9 @@ Toby Thurston -- 14 Mar 2016
 import re
 import sys
 import math
-from osgb.mapping import sheet_list, is_known_sheet, resolve_grid
+from osgb.mapping import map_locker
+
+__all__ = ['format_grid', 'parse_grid', 'sheet_list']
 
 GRID_SQ_LETTERS               = 'VWXYZQRSTULMNOPFGHJKABCDE'
 GRID_SIZE                     = int(math.sqrt(len(GRID_SQ_LETTERS)))
@@ -16,7 +18,68 @@ MAJOR_GRID_SQ_EASTING_OFFSET  = 2 * MAJOR_GRID_SQ_SIZE
 MAJOR_GRID_SQ_NORTHING_OFFSET = 1 * MAJOR_GRID_SQ_SIZE
 MAX_GRID_SIZE                 = MINOR_GRID_SQ_SIZE * len(GRID_SQ_LETTERS)
 
-def format_grid(easting, northing, form='SS EEE NNN', maps=None):
+def sheet_list(easting, northing, series='ABCHJ'):
+    """Return a list of map sheets that show the (easting, northing) point given.
+
+    The optional argument "series" controls which maps are included in the 
+    list.  The default is to include maps from all defined series.
+
+    >>> sheet_list(438710.908, 114792.248, series='AB')
+    ['A:196', 'B:OL22E']
+
+    Currently the series included are:
+
+    A: OS Landranger 1:50000 maps
+    B: OS Explorer 1:25000 maps (some of these are designated as `Outdoor Leisure' maps)
+    C: OS Seventh Series One-Inch 1:63360 maps
+    H: Harvey British Mountain maps - mainly at 1:40000
+    J: Harvey Super Walker maps - mainly at 1:25000
+
+    so if you only want Explorer maps use: series='B', and if you
+    want only Explorers and Landrangers use: series='AB', and so on. 
+
+    Note that the numbers returned for the Harvey maps have been invented
+    for the purposes of this module.  They do not appear on the maps
+    themselves; instead the maps have titles.  You can use the numbers
+    returned as an index to the maps data to find the appropriate title.
+
+    >>> sheet_list(314159, 271828)
+    ['A:136', 'A:148', 'B:200E', 'B:214E', 'C:128']
+
+    >>> sheet_list(651537, 313135, series='A')
+    ['A:134']
+    """
+
+    sheets = list()
+    for (k, m) in map_locker.items():
+        if k[0] not in series:
+            continue
+
+        if m['bbox'][0][0] <= easting < m['bbox'][1][0]:
+            if m['bbox'][0][1] <= northing < m['bbox'][1][1]:
+                if 0 != winding_number(easting, northing, m['polygon']):
+                    sheets.append(k)
+
+    return sorted(sheets)
+
+# is $pt left of $a--$b?
+def is_left(x, y, a, b):
+    return ( (b[0] - a[0]) * (y - a[1]) - (x - a[0]) * (b[1] - a[1]) )
+
+# adapted from http://geomalgorithms.com/a03-_inclusion.html
+def winding_number(x, y, poly):
+    w = 0
+    for i in range(len(poly)-1):
+        if poly[i][1] <= y:
+            if poly[i+1][1] > y and is_left(x, y, poly[i], poly[i+1]) > 0:
+                w += 1
+        else:
+            if poly[i+1][1] <= y and is_left(x, y, poly[i], poly[i+1]) < 0:
+                w -= 1
+    return w
+
+
+def format_grid(easting, northing=None, form='SS EEE NNN', maps=None):
     """Formats an (easting, northing) pair into traditional grid reference.
 
     This routine formats an (easting, northing) pair into a traditional
@@ -45,11 +108,7 @@ def format_grid(easting, northing, form='SS EEE NNN', maps=None):
     corner of the relevant square.  The system is described below the legend on
     all OS Landranger maps.
 
-    Optional keyword arguments
-    
-    • form  
-
-    Controls the format of the grid reference.  
+    An optional keyword argument "form" controls the format of the grid reference.  
 
     >>> format_grid(438710.908, 114792.248, form='SS')
     'SU'
@@ -71,8 +130,8 @@ def format_grid(easting, northing, form='SS EEE NNN', maps=None):
     'SU 387 147'
     >>> format_grid(438710.908, 114792.248, form='SS EEEE NNNN')
     'SU 3871 1479'
-    >>> format_grid(438710.908, 114792.248, form='SS EEEEE NNNNN')
-    'SU 38710 14792'
+    >>> format_grid(400010.908, 114792.248, form='SS EEEEE NNNNN')
+    'SU 00010 14792'
 
     You can't leave out the SS, you can't have N before E, and there must be
     the same number of Es and Ns.
@@ -88,35 +147,13 @@ def format_grid(easting, northing, form='SS EEE NNN', maps=None):
     >>> format_grid(438710.908, 114792.248, form='trad')
     'SU 387 147'
 
-    • maps
-
-    Controls whether to include a list of map sheets after the grid
-    reference.  Set it None to leave it out.  Or to a string that 
-    identifies which series you want.  The default is None.
-
-    >>> format_grid(438710.908, 114792.248, maps='AB')
-    ('SU 387 147', ['A:196', 'B:OL22E'])
-
-    Currently the series included are:
-
-    A: OS Landranger 1:50000 maps
-    B: OS Explorer 1:25000 maps (some of these are designated as `Outdoor Leisure' maps)
-    C: OS Seventh Series One-Inch 1:63360 maps
-    H: Harvey British Mountain maps - mainly at 1:40000
-    J: Harvey Super Walker maps - mainly at 1:25000
-
-    so if you only want Explorer maps use: maps='B', and if you
-    want only Explorers and Landrangers use: maps='AB', and so on. 
-
-    Note that the numbers returned for the Harvey maps have been invented
-    for the purposes of this module.  They do not appear on the maps
-    themselves; instead the maps have titles.  You can use the numbers
-    returned as an index to the maps data to find the appropriate title.
     """
+    if northing is None:
+        (easting, northing) = easting
     
-    sq = grid_to_sq(easting,northing);
+    sq = grid_to_sq(easting,northing)
     if sq is None:
-        print("Too far off the grid: easting northing", file=sys.stderr);
+        print("Too far off the grid: easting northing", file=sys.stderr)
         return None
 
     e = int(easting  % MINOR_GRID_SQ_SIZE)
@@ -140,12 +177,7 @@ def format_grid(easting, northing, form='SS EEE NNN', maps=None):
     e = int(e/10**(5-len(e_spec)))
     n = int(n/10**(5-len(n_spec)))
 
-    gr = sq + space_a + '{0:{1}d}'.format(e, len(e_spec)) + space_b + '{0:{1}d}'.format(n, len(n_spec))
-    
-    if maps is None:
-        return gr
-
-    return gr, sheet_list(easting, northing, maps)
+    return sq + space_a + '{0:0{1}d}'.format(e, len(e_spec)) + space_b + '{0:0{1}d}'.format(n, len(n_spec))
 
 def parse_grid(*grid_elements, figs=3):
     """Parse a grid reference from a range of inputs.
@@ -154,7 +186,7 @@ def parse_grid(*grid_elements, figs=3):
     string, or a list of arguments, representing a grid reference.  The pair
     returned are in units of metres from the false origin of the grid.
 
-    The arguments should be in one of the following forms
+    The arguments should be in one of the following three forms
 
     •   A single string representing a grid reference
 
@@ -185,6 +217,32 @@ def parse_grid(*grid_elements, figs=3):
 
         >>> parse_grid("TA1234567890")
         (512345, 467890)
+
+        Here are some more extreme examples:
+
+        St Marys lifeboat station
+        >>> parse_grid('SV9055710820')
+        (90557, 10820)
+
+        Lerwick lifeboat station
+        >>> parse_grid('HU4795841283')
+        (447958, 1141283)
+
+        At sea, off the Scillies
+        >>> parse_grid('WE950950')
+        (-5000, -5000)
+
+        Note in the last one that we are "off" the grid proper.  This lets you work
+        with "pseudo-grid-references" like these:
+        
+        St Peter Port the Channel Islands
+        >>> parse_grid('XD 61191 50692')
+        (361191, -49308)
+        
+        Rockall 
+        >>> parse_grid('MC 03581 16564')
+        (-296419, 916564)
+
 
      •  A two or three element list representing a grid reference
 
@@ -222,74 +280,48 @@ def parse_grid(*grid_elements, figs=3):
         hectometres as in a traditional grid reference. The maximum is 5
         and the minimum is the length of the longer of easting or northing.
 
-    Here are some more extreme examples:
+    •   A string or a list representing a map and a local grid reference, 
+        corresponding to the following examples:
 
-    St Marys lifeboat station
-    >>> parse_grid('SV9055710820')
-    (90557, 10820)
+        Caesar's Camp
+        >>> parse_grid('176/224711')
+        (522400, 171100)
 
-    Lerwick lifeboat station
-    >>> parse_grid('HU4795841283')
-    (447958, 1141283)
+        Charlbury Station
+        >>> parse_grid('A:164/352194')
+        (435200, 219400)
 
-    At sea, off the Scillies
-    >>> parse_grid('WE950950')
-    (-5000, -5000)
+        map Chesters Bridge
+        >>> parse_grid('B:OL43E/914701')
+        (391400, 570100)
 
-    Note in the last one that we are "off" the grid proper.  This lets you work
-    with "pseudo-grid-references" like these:
-    
-    St Peter Port the Channel Islands
-    >>> parse_grid('XD 61191 50692')
-    (361191, -49308)
-    
-    Rockall 
-    >>> parse_grid('MC 03581 16564')
-    (-296419, 916564)
+        map Chesters Bridge
+        >>> parse_grid('B:OL43E 914 701')
+        (391400, 570100)
 
+        map 2-arg Chesters Bridge
+        >>> parse_grid('B:OL43E','914701')
+        (391400, 570100)
 
-    And now some maps
+        map 3-arg Chesters Bridge
+        >>> parse_grid('B:OL43E',914,701)
+        (391400, 570100)
 
-    Caesar's Camp
-    >>> parse_grid('176/224711')
-    (522400, 171100)
+        Carfax
+        >>> parse_grid(164,513,62)
+        (451300, 206200)
 
-    Charlbury Station
-    >>> parse_grid('A:164/352194')
-    (435200, 219400)
+        map with dual name
+        >>> parse_grid('B:119/OL3/480103')
+        (448000, 110300)
 
-    map Chesters Bridge
-    >>> parse_grid('B:OL43E/914701')
-    (391400, 570100)
+        inset on B:309
+        >>> parse_grid('B:309S.a 26432 34013')
+        (226432, 534013)
 
-    map Chesters Bridge
-    >>> parse_grid('B:OL43E 914 701')
-    (391400, 570100)
-
-    map 2-arg Chesters Bridge
-    >>> parse_grid('B:OL43E','914701')
-    (391400, 570100)
-
-    map 3-arg Chesters Bridge
-    >>> parse_grid('B:OL43E',914,701)
-    (391400, 570100)
-
-    Carfax
-    >>> parse_grid(164,513,62)
-    (451300, 206200)
-
-
-    map with dual name
-    >>> parse_grid('B:119/OL3/480103')
-    (448000, 110300)
-
-    inset on B:309
-    >>> parse_grid('B:309S.a 26432 34013')
-    (226432, 534013)
-
-    3-arg, dual name
-    >>> parse_grid('B:368/OL47W', 723, 112)
-    (272300, 711200)
+        3-arg, dual name
+        >>> parse_grid('B:368/OL47W', 723, 112)
+        (272300, 711200)
 
     """
 
@@ -319,13 +351,21 @@ def parse_grid(*grid_elements, figs=3):
         sheet, numbers = m.group(1,2)
 
         # allow Landranger sheets with no prefix
-        if is_known_sheet('A:' + sheet):
+        if 'A:' + sheet in map_locker:
             sheet = 'A:' + sheet
 
-        if is_known_sheet(sheet):
+        if sheet in map_locker:
+            map = map_locker[sheet] 
+            ll_corner = map['bbox'][0]  
             (e, n) = get_eastings_northings(numbers)
+            easting  = ll_corner[0] + (e - ll_corner[0]) % MINOR_GRID_SQ_SIZE
+            northing = ll_corner[1] + (n - ll_corner[1]) % MINOR_GRID_SQ_SIZE
+            if 0 == winding_number(easting, northing, map['polygon']):
+                print("Grid reference is not on sheet {}".format(sheet), file=sys.stderr)
+                print("bbox: {}".format(' '.join(str(x) for x in map['bbox'])), file=sys.stderr)
+                return None
 
-            return resolve_grid(sheet, e, n)
+            return (easting, northing)
 
     # just a pair of numbers
     try:
@@ -359,8 +399,8 @@ def grid_to_sq(e, n):
 
     """
     
-    e += MAJOR_GRID_SQ_EASTING_OFFSET;
-    n += MAJOR_GRID_SQ_NORTHING_OFFSET;
+    e += MAJOR_GRID_SQ_EASTING_OFFSET
+    n += MAJOR_GRID_SQ_NORTHING_OFFSET
 
     if 0 <= e <  MAX_GRID_SIZE and 0 <= n < MAX_GRID_SIZE:
         major_index = int(e/MAJOR_GRID_SQ_SIZE) + GRID_SIZE * int(n/MAJOR_GRID_SQ_SIZE)

@@ -1,0 +1,71 @@
+#! /usr/bin/env python3
+
+"""Convert coordinates.
+
+Toby Thurston -- 15 Mar 2016 
+"""
+import argparse
+import osgb
+import re
+
+def is_float(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
+alphabet = ' 1234567890-.+/:ABCDEFGHJKLMNOPQRSTUVWXYZ' # no I in this
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("grid_or_ll_strings", 
+                         type=str, 
+                         nargs='*',
+                         default=['TW','101','203'],
+                         help="A grid reference or lat/lon string")
+    args = parser.parse_args()
+  
+    input = ' '.join(x.upper() for x in args.grid_or_ll_strings)
+    input = ''.join(x for x in input if x in alphabet)
+
+    got_gridref = True # we assume this
+
+    m = re.match(r'(\S+)\s+(\S+)', input)
+    if m:
+        a,b = m.group(1,2)
+        if is_float(a) and is_float(b):
+            a = float(a)
+            b = float(b)
+            if abs(a) < 70 and abs(b) < 70:
+                got_gridref = False
+
+    if got_gridref:
+        (e,n) = osgb.parse_grid(input)
+        (lat,lon) = osgb.grid_to_ll(e,n)
+        (oe, on) = (e, n)
+        (olat,olon) = osgb.grid_to_ll(e,n,'OSGB36')
+
+    else:
+        (lon, lat) = sorted((a,b)) # lat > lon for all GB
+        (e,n) = osgb.ll_to_grid(lat, lon)
+        (olat, olon) = (lat, lon)
+        (oe,on) = osgb.ll_to_grid(lat, lon, 'OSGB36')
+    
+    grid = osgb.format_grid(e,n)
+    maps = osgb.sheet_list(e,n)
+    if len(maps) > 0:
+        map_string = 'on sheets {}'.format(', '.join(maps))
+    else:
+        map_string = '(not covered by any OSGB map)'
+
+    print('WGS84  {:.8g} {:.7g} == {:.3f} {:.3f} == {} {}'.format( lat, lon, e, n, grid, map_string))
+
+    grid = osgb.format_grid(oe,on)
+    maps = osgb.sheet_list(oe,on)
+    if len(maps) > 0:
+        map_string = 'on sheets {}'.format(', '.join(maps))
+    else:
+        map_string = '(not covered by any OSGB map)'
+
+    print('OSGB36 {:.8g} {:.7g} == {:.3f} {:.3f} == {} {}'.format( olat, olon, oe, on, grid, map_string))

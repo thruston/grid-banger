@@ -6,6 +6,7 @@ Toby Thurston -- 13 Mar 2016
 
 import pkgutil
 import math
+from osgb.gridder import format_grid
 
 __all__ = ['grid_to_ll', 'll_to_grid']
 
@@ -98,44 +99,100 @@ def grid_to_ll(easting, northing, model='WGS84'):
     return shift_ll_from_osgb36_to_wgs84(os_lat, os_lon)
 
 
-def ll_to_grid(lat, lon, model='WGS84'):
-    """Convert (latitude, longitude) to an OSGB grid (easting, northing) pair.
+def ll_to_grid(lat, lon, model='WGS84', rounding=-1):
+    """Convert a (latitude, longitude) pair to an OSGB grid (easting, northing) pair.
 
-    Input 
+    Output: a tuple containing (easting, northing) in metres from the grid origin.
 
-    >>> '{:.3f} {:.3f}'.format(*ll_to_grid(51.5,-2.1))
-    '393154.801 177900.605'
+    Input: The arguments should be supplied as real numbers representing
+    decimal degrees, like this
 
-    >>> '{:.3f} {:.3f}'.format(*ll_to_grid(51.3,0))
-    '539524.823 157551.911'
+    >>> ll_to_grid(51.5, -2.1)   
+    (393154.801, 177900.605)
 
-    >>> '{:.3f} {:.3f}'.format(*ll_to_grid(lat=51.3,lon=0))
-    '539524.823 157551.911'
+    Following the normal convention, positive arguments mean North or
+    East, negative South or West.  
 
-    >>> '{:.3f} {:.3f}'.format(*ll_to_grid(0,51.3))
-    '539524.823 157551.911'
+    If you have data with degrees, minutes and seconds, you can convert them
+    to decimals like this:
 
-    >>> ll_to_grid(49, -2, model="OSGB36")
-    (400000.0, -100000.0)
+    >>> ll_to_grid(51+25/60, 0-5/60-2/3600)
+    (533338.144, 170369.235)
 
-    >>> '{:.3f} {:.3f}'.format(*ll_to_grid(52, -2, model="OSGB36"))
-    '400000.000 233553.731'
+    If you have trouble remembering the order of the arguments, or the
+    returned values, note that latitude comes before longitude in the
+    alphabet too, as easting comes before northing.  
 
-    >>> '{:.3f} {:.3f}'.format(*ll_to_grid(56+55/60, -5.25, model="OSGB36"))
-    '202190.386 785279.519'
+    However since reasonable latitudes for the OSGB are in the range 49 to 61,
+    and reasonable longitudes in the range -9 to +2, ll_to_grid accepts
+    argument in either order.  If your longitude is larger than your latitude,
+    then the values of the arguments will be silently swapped:  
 
-    Far west
-    >>> '{:.0f} {:.0f}'.format(*ll_to_grid(51.3, -10))
-    '-157250 186110'
+    >>> ll_to_grid(-2.1, 51.5)   
+    (393154.801, 177900.605)
 
-    Far North
-    >>> '{:.0f} {:.0f}'.format(*ll_to_grid(61.3, 0))
-    '507242 1270342'
+    But you can always give the arguments as named keywords if you prefer:
 
-    In sea north-west of Coll
-    >>> '{:.0f} {:.0f}'.format(*ll_to_grid(56.75, -7))
-    '94471 773206'
+    >>> ll_to_grid(lon=-2.1, lat=51.5)   
+    (393154.801, 177900.605)
 
+    The easting and northing will be returned as the distance in metres from
+    the `false point of origin' of the British Grid (which is a point some
+    way to the south-west of the Scilly Isles). 
+
+    If the coordinates you supply are in the area covered by the OSTN02
+    transformation data, then the results will be rounded to 3 decimal
+    places, which corresponds to the nearest millimetre.  If they are
+    outside the coverage (which normally means more than a few km off shore)
+    then the conversion is automagically done using a Helmert transformation
+    instead of the OSTN02 data.  The results will be rounded to the nearest
+    metre in this case, although you probably should not rely on the results
+    being more accurate than about 5m.
+
+       A point in the sea, to the north-west of Coll
+       >>> ll_to_grid(56.75,-7)
+       (94471.0, 773206.0)
+
+    The numbers returned may be negative if your latitude and longitude are
+    far enough south and west, but beware that the transformation is less
+    and less accurate or useful the further you get from the British Isles.
+
+    >>> ll_to_grid(51.3, -10)
+    (-157250.0, 186110.0)
+
+    If you want the result presented in a more traditional grid reference
+    format you should pass the results to the grid formatting routine 
+
+        >>> format_grid(ll_to_grid(51.5,-0.0833))
+        'TQ 331 796'
+
+    ll_to_grid() also takes an optional argument that sets the ellipsoid
+    model to use.  This defaults to `WGS84', the name of the normal model
+    for working with normal GPS coordinates, but if you want to work with
+    the traditional latitude and longitude values printed on OS maps then
+    you should add an optional model argument
+
+        >>> ll_to_grid(49,-2, model='OSGB36')
+        (400000.0, -100000.0)
+
+    Incidentally, the grid coordinates returned by this call are the
+    coordinates of the `true point of origin' of the British grid.  You should
+    get back an easting of 400000.0 for any point with longitude 2W since this is
+    the central meridian used for the OSGB projection.  However you will get a
+    slightly different value unless you specify "model='OSGB36'"
+    since the WGS84 meridians are not quite the same as OSGB36.
+
+        >>> ll_to_grid(52,-2, model='OSGB36')
+        (400000.0, 233553.731)
+        >>> ll_to_grid(52,-2, model='WGS84')
+        (400096.263, 233505.401)
+
+    You can also control the rounding directly if you need to (but beware that
+    adding more decimal places does not make the conversion any more accurate -
+    the formulae used are only designed to be accurate to 1mm).
+
+        >>> ll_to_grid(52,-2, rounding=4)
+        (400096.2628, 233505.4007)
 
     """
 
@@ -152,11 +209,17 @@ def ll_to_grid(lat, lon, model='WGS84'):
         if shifts is not None:
             easting += shifts[0]
             northing += shifts[1]
+            if 0 > rounding:
+                rounding = 3
         else:
             (osgb_lat, osgb_lon) = shift_ll_from_wgs84_to_osgb36(lat, lon)
             (easting, northing)  = project_onto_grid(osgb_lat, osgb_lon, 'OSGB36')
+            if 0 > rounding:
+                rounding = 0
 
-    return (easting, northing)
+    if 0 > rounding:
+        rounding = 3
+    return (round(easting,rounding), round(northing, rounding))
 
 def project_onto_grid(lat, lon, model):
     
