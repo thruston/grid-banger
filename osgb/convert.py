@@ -24,6 +24,7 @@ ORIGIN_NORTHING     = -100000.0
 CONVERGENCE_FACTOR  = 0.9996012717
 
 ostn_data = pkgutil.get_data("osgb", "ostn02.data").split(b'\n')
+ostn_cache = dict()
 
 def grid_to_ll(easting, northing, model='WGS84'):
     """Convert OSGB (easting, northing) to latitude and longitude.
@@ -84,7 +85,7 @@ def grid_to_ll(easting, northing, model='WGS84'):
                 # we have been shifted off the edge
                 in_ostn02_polygon = False
                 break
-                
+             
             x = easting - shifts[0]
             y = northing - shifts[1]
             if abs(shifts[0] - last_shifts[0]) < 0.0001 and abs(shifts[1] - last_shifts[1]) < 0.0001:
@@ -93,7 +94,7 @@ def grid_to_ll(easting, northing, model='WGS84'):
             last_shifts = shifts[:]
         
         if in_ostn02_polygon:
-            return reverse_project_onto_ellipsoid(easting-shifts[0], northing-shifts[1], 'WGS84')
+            return reverse_project_onto_ellipsoid(x, y, 'WGS84')
         
     # If we get here, we must use the Helmert approx
     return shift_ll_from_osgb36_to_wgs84(os_lat, os_lon)
@@ -335,7 +336,6 @@ def get_ostn_pair(x,y):
     >>> get_ostn_pair(331,431)
     [95.383, -72.19, 95.405, -72.196]
     """
-
     leading_zeros = int(ostn_data[y][0:3])
 
     if x < leading_zeros:
@@ -375,11 +375,21 @@ def find_OSTN02_shifts_at(easting, northing):
     if n_index >= len(ostn_data):
         return None
 
-    lo_shifts = get_ostn_pair(e_index, n_index) 
+    lo_key = e_index + n_index * 701
+
+    if lo_key not in ostn_cache:
+        ostn_cache[lo_key] = get_ostn_pair(e_index, n_index)
+
+    lo_shifts = ostn_cache[lo_key]
     if lo_shifts is None:
         return None
 
-    hi_shifts = get_ostn_pair(e_index, n_index+1) 
+    hi_key = lo_key + 701
+
+    if hi_key not in ostn_cache:
+        ostn_cache[hi_key] = get_ostn_pair(e_index, n_index+1)
+
+    hi_shifts = ostn_cache[hi_key]
     if hi_shifts is None:
         return None
 
