@@ -1,6 +1,6 @@
 """Data for OSGB and other walkers maps in England, Wales, Scotland, and Isle of Man.
 
-Toby Thurston -- 15 Mar 2016 
+Toby Thurston -- 19 Mar 2016 
 """
 
 map_locker = {

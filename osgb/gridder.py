@@ -35,9 +35,6 @@ def sheet_list(easting, northing, series='ABCHJ'):
     H: Harvey British Mountain maps - mainly at 1:40000
     J: Harvey Super Walker maps - mainly at 1:25000
 
-    so if you only want Explorer maps use: series='B', and if you
-    want only Explorers and Landrangers use: series='AB', and so on. 
-
     Note that the numbers returned for the Harvey maps have been invented
     for the purposes of this module.  They do not appear on the maps
     themselves; instead the maps have titles.  You can use the numbers
@@ -46,8 +43,18 @@ def sheet_list(easting, northing, series='ABCHJ'):
     >>> sheet_list(314159, 271828)
     ['A:136', 'A:148', 'B:200E', 'B:214E', 'C:128']
 
+    You can restrict the list to certain series.
+    So if you only want Explorer maps use: series='B', and if you
+    want only Explorers and Landrangers use: series='AB', and so on. 
+
     >>> sheet_list(651537, 313135, series='A')
     ['A:134']
+
+    If the (easting, northing) pair is not covered by any map sheet you'll get 
+    an empty list
+    >>> sheet_list(0,0)
+    []
+
     """
 
     sheets = list()
@@ -144,17 +151,53 @@ def format_grid(easting, northing=None, form='SS EEE NNN', maps=None):
     'SU 38710 14792'
 
     The format can be given as upper case or lower case or a mixture.  
+    
     >>> format_grid(438710.908, 114792.248, form='trad')
     'SU 387 147'
+
+    but in general the form argument must match "SS E* N*" (spaces optional)
+
+    >>> format_grid(432800,250000, form='TT')
+    Traceback (most recent call last):
+    ...
+    ValueError: I cannot match this form argument --> TT
+
+    >>> format_grid(314159, 271828, form='SS')
+    'SO'
+    >>> format_grid(0, 0, form='SS')
+    'SV'
+    >>> format_grid(432800,1250000, form='SS')
+    'HP'
+
+    The arguments can be negative...
+
+    >>> format_grid(-5,-5, form='SS')
+    'WE'
+
+    But must not be too far away from the grid...
+
+    >>> format_grid(-1e12,-5)
+    Traceback (most recent call last):
+    ...
+    ValueError: Too far away from OSGB grid: -1000000000000.0 -5
+
 
     """
     if northing is None:
         (easting, northing) = easting
     
-    sq = grid_to_sq(easting,northing)
-    if sq is None:
-        print("Too far off the grid: easting northing", file=sys.stderr)
-        return None
+    e = easting + MAJOR_GRID_SQ_EASTING_OFFSET
+    n = northing + MAJOR_GRID_SQ_NORTHING_OFFSET
+
+    if 0 <= e <  MAX_GRID_SIZE and 0 <= n < MAX_GRID_SIZE:
+        major_index = int(e/MAJOR_GRID_SQ_SIZE) + GRID_SIZE * int(n/MAJOR_GRID_SQ_SIZE)
+        e = e % MAJOR_GRID_SQ_SIZE
+        n = n % MAJOR_GRID_SQ_SIZE
+        minor_index = int(e/MINOR_GRID_SQ_SIZE) + GRID_SIZE * int(n/MINOR_GRID_SQ_SIZE)
+        sq = GRID_SQ_LETTERS[major_index] + GRID_SQ_LETTERS[minor_index]
+
+    else:
+        raise ValueError("Too far away from OSGB grid: {} {}".format(easting, northing))
 
     e = int(easting  % MINOR_GRID_SQ_SIZE)
     n = int(northing % MINOR_GRID_SQ_SIZE)
@@ -170,8 +213,7 @@ def format_grid(easting, northing=None, form='SS EEE NNN', maps=None):
 
     m = re.match(r'S{1,2}(\s*)(E{1,5})(\s*)(N{1,5})', ff)
     if m is None:
-        print("Invalid form: {}".format(form), file=sys.stderr)
-        return None
+        raise ValueError("I cannot match this form argument --> {}".format(form))
 
     (space_a, e_spec, space_b, n_spec) = m.group(1,2,3,4)
     e = int(e/10**(5-len(e_spec)))
@@ -261,7 +303,7 @@ def parse_grid(*grid_elements, figs=3):
 
         Or even just two numbers (primarily included for testing purposes)
         >>> parse_grid(314159, 271828)
-        (314159.0, 271828.0)
+        (314159, 271828)
 
         If you are processing grid references from some external data source
         beware that if you use a list with bare numbers you may lose any leading
@@ -323,6 +365,14 @@ def parse_grid(*grid_elements, figs=3):
         >>> parse_grid('B:368/OL47W', 723, 112)
         (272300, 711200)
 
+
+    If there's no matching input then a ValueError is raised.
+    >>> parse_grid('Somewhere in London')
+    Traceback (most recent call last):
+    ...
+    ValueError: I can't read a grid reference from this -> Somewhere in London
+
+
     """
 
     easting = 0
@@ -338,11 +388,12 @@ def parse_grid(*grid_elements, figs=3):
     # normal case : TQ 123 456 etc
     offsets = get_grid_square_offsets(s)
     if offsets is not None:
-        if len(s) == 2:
+        if len(s) == 2: # ie s must have been a valid square
             return offsets
 
-        (e, n) = get_eastings_northings(s[2:])
-        return (e+offsets[0], n+offsets[1])
+        en_tuple = get_eastings_northings(s[2:])
+        if en_tuple is not None:
+            return (en_tuple[0]+offsets[0], en_tuple[1]+offsets[1])
 
     # sheet id instead of grid sq
     m = re.match(r'([A-Z0-9:./]+)\D+(\d+\D*\d+)', s, re.IGNORECASE)
@@ -368,15 +419,12 @@ def parse_grid(*grid_elements, figs=3):
             return (easting, northing)
 
     # just a pair of numbers
-    try:
-        (easting, northing) = s.split()
-        if is_number(easting) and is_number(northing):
-            return (float(easting), float(northing))
-    except ValueError:
-        pass
+    if len(grid_elements) == 2:
+        if is_number(grid_elements[0]):
+            if is_number(grid_elements[1]):
+                return tuple(grid_elements)
 
-    print('{} does not look like a grid reference to me'.format(s), file=sys.stderr)
-    return None
+    raise ValueError("I can't read a grid reference from this -> {}".format(s))
 
 def is_number(s):
     try:
@@ -385,31 +433,6 @@ def is_number(s):
     except ValueError:
         return False
 
-def grid_to_sq(e, n):
-    """Return major grid square identifier for (e, n) pair
-
-    >>> grid_to_sq(314159, 271828)
-    'SO'
-    >>> grid_to_sq(0, 0)
-    'SV'
-    >>> grid_to_sq(432800,1250000)
-    'HP'
-    >>> grid_to_sq(-5,-5)
-    'WE'
-
-    """
-    
-    e += MAJOR_GRID_SQ_EASTING_OFFSET
-    n += MAJOR_GRID_SQ_NORTHING_OFFSET
-
-    if 0 <= e <  MAX_GRID_SIZE and 0 <= n < MAX_GRID_SIZE:
-        major_index = int(e/MAJOR_GRID_SQ_SIZE) + GRID_SIZE * int(n/MAJOR_GRID_SQ_SIZE)
-        e = e % MAJOR_GRID_SQ_SIZE
-        n = n % MAJOR_GRID_SQ_SIZE
-        minor_index = int(e/MINOR_GRID_SQ_SIZE) + GRID_SIZE * int(n/MINOR_GRID_SQ_SIZE)
-        return GRID_SQ_LETTERS[major_index] + GRID_SQ_LETTERS[minor_index]
-
-    return None
 
 def get_grid_square_offsets(sq):
     """Get (e,n) for ll corner of a grid square
