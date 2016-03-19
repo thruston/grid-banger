@@ -7,6 +7,7 @@ Toby Thurston -- 15 Mar 2016
 import argparse
 import osgb
 import re
+import webbrowser
 
 def is_float(s):
     try:
@@ -19,6 +20,7 @@ alphabet = ' 1234567890-.+/:ABCDEFGHJKLMNOPQRSTUVWXYZ' # no I in this
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("--show", action='store_true')
     parser.add_argument("grid_or_ll_strings", 
                          type=str, 
                          nargs='*',
@@ -69,3 +71,9 @@ if __name__ == "__main__":
         map_string = '(not covered by any OSGB map)'
 
     print('OSGB36 {:.8g} {:.7g} == {:.3f} {:.3f} == {} {}'.format( olat, olon, oe, on, grid, map_string))
+
+    if args.show:
+        url = 'http://www.streetmap.co.uk/map.srf?x={:06d}&y={:06d}&z=3'.format(int(e), int(n))
+        #print(url)
+        webbrowser.open(url)
+
