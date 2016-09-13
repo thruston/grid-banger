@@ -4,8 +4,8 @@ Toby Thurston -- 13 Mar 2016
 
 """
 
-import pkgutil
 import math
+import pkgutil
 from osgb.gridder import format_grid
 
 __all__ = ['grid_to_ll', 'll_to_grid']

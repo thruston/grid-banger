@@ -1,11 +1,11 @@
 """Parse and format OSGB grid reference strings
 
-Toby Thurston -- 14 Mar 2016
+Toby Thurston -- 13 Sep 2016 
 """
 
+import math
 import re
 import sys
-import math
 from osgb.mapping import map_locker
 
 __all__ = ['format_grid', 'parse_grid', 'sheet_list']
@@ -17,6 +17,98 @@ MAJOR_GRID_SQ_SIZE            = GRID_SIZE * MINOR_GRID_SQ_SIZE
 MAJOR_GRID_SQ_EASTING_OFFSET  = 2 * MAJOR_GRID_SQ_SIZE
 MAJOR_GRID_SQ_NORTHING_OFFSET = 1 * MAJOR_GRID_SQ_SIZE
 MAX_GRID_SIZE                 = MINOR_GRID_SQ_SIZE * len(GRID_SQ_LETTERS)
+
+
+class GridderFailure(Exception):
+    """Parent class for Gridder exceptions"""
+    pass
+
+
+class GridParseFailure(GridderFailure):
+    """Parent class for parsing exceptions"""
+    pass
+
+
+class GridFormatFailure(GridderFailure):
+    """Parent class for formatting exceptions"""
+    pass
+
+
+class GridGarbage(GridParseFailure):
+    """Raised when no grid ref can be deduced from the string given.
+
+    Attributes:
+        input
+
+    """
+    def __init__(self,input):
+        self.input = input
+
+    def __str__(self):
+        return "I can't read a grid reference from this -> {}".format(self.input)
+
+
+class GridSheetMismatch(GridParseFailure):
+    """Raised when grid ref given is not on sheet given
+
+    Attributes:
+        sheet
+        easting
+        northing
+
+    """
+    def __init__(self,sheet,easting, northing):
+        self.sheet = sheet
+        self.easting = easting
+        self.northing = northing
+
+    def __str__(self):
+        return "Grid point ({},{}) is not on sheet {}".format(self.easting, self.northing, self.sheet)
+
+
+class UndefinedSheet(GridParseFailure):
+    """Raised when sheet given is not one we know
+
+    Attributes:
+        sheet
+
+    """
+    def __init__(self,sheet):
+        self.sheet = sheet
+
+    def __str__(self):
+        return "Sheet {} is not known here.".format(self.sheet)
+
+
+class FaultyForm(GridFormatFailure):
+    """Raised when the form given to format_grid is unmatched.
+
+    Attributes:
+       form
+
+    """
+    def __init__(self, form):
+        self.form = form
+
+    def __str__(self):
+        return "This form argument was not matched --> form='{}'".format(self.form)
+
+
+class FarFarAway(GridFormatFailure):
+    """Raised when grid reference is nowhere near GB.
+
+    Attributes:
+       northing
+       easting
+    """
+    def __init__(self, easting, northing):
+        self.easting = easting
+        self.northing = northing
+
+    def __str__(self):
+        return "The spot with coordinates ({},{}) is too far from the OSGB grid".format(self.easting, self.northing)
+
+
 
 def sheet_list(easting, northing, series='ABCHJ'):
     """Return a list of map sheets that show the (easting, northing) point given.
@@ -64,24 +156,24 @@ def sheet_list(easting, northing, series='ABCHJ'):
 
         if m['bbox'][0][0] <= easting < m['bbox'][1][0]:
             if m['bbox'][0][1] <= northing < m['bbox'][1][1]:
-                if 0 != winding_number(easting, northing, m['polygon']):
+                if 0 != _winding_number(easting, northing, m['polygon']):
                     sheets.append(k)
 
     return sorted(sheets)
 
 # is $pt left of $a--$b?
-def is_left(x, y, a, b):
+def _is_left(x, y, a, b):
     return ( (b[0] - a[0]) * (y - a[1]) - (x - a[0]) * (b[1] - a[1]) )
 
 # adapted from http://geomalgorithms.com/a03-_inclusion.html
-def winding_number(x, y, poly):
+def _winding_number(x, y, poly):
     w = 0
     for i in range(len(poly)-1):
         if poly[i][1] <= y:
-            if poly[i+1][1] > y and is_left(x, y, poly[i], poly[i+1]) > 0:
+            if poly[i+1][1] > y and _is_left(x, y, poly[i], poly[i+1]) > 0:
                 w += 1
         else:
-            if poly[i+1][1] <= y and is_left(x, y, poly[i], poly[i+1]) < 0:
+            if poly[i+1][1] <= y and _is_left(x, y, poly[i], poly[i+1]) < 0:
                 w -= 1
     return w
 
@@ -160,7 +252,7 @@ def format_grid(easting, northing=None, form='SS EEE NNN', maps=None):
     >>> format_grid(432800,250000, form='TT')
     Traceback (most recent call last):
     ...
-    ValueError: I cannot match this form argument --> TT
+    FaultyForm: This form argument was not matched --> form='TT'
 
     >>> format_grid(314159, 271828, form='SS')
     'SO'
@@ -179,7 +271,7 @@ def format_grid(easting, northing=None, form='SS EEE NNN', maps=None):
     >>> format_grid(-1e12,-5)
     Traceback (most recent call last):
     ...
-    ValueError: Too far away from OSGB grid: -1000000000000.0 -5
+    FarFarAway: The spot with coordinates (-1000000000000.0,-5) is too far from the OSGB grid
 
 
     """
@@ -197,7 +289,7 @@ def format_grid(easting, northing=None, form='SS EEE NNN', maps=None):
         sq = GRID_SQ_LETTERS[major_index] + GRID_SQ_LETTERS[minor_index]
 
     else:
-        raise ValueError("Too far away from OSGB grid: {} {}".format(easting, northing))
+        raise FarFarAway(easting, northing)
 
     e = int(easting  % MINOR_GRID_SQ_SIZE)
     n = int(northing % MINOR_GRID_SQ_SIZE)
@@ -213,7 +305,7 @@ def format_grid(easting, northing=None, form='SS EEE NNN', maps=None):
 
     m = re.match(r'S{1,2}(\s*)(E{1,5})(\s*)(N{1,5})', ff)
     if m is None:
-        raise ValueError("I cannot match this form argument --> {}".format(form))
+        raise FaultyForm(form)
 
     (space_a, e_spec, space_b, n_spec) = m.group(1,2,3,4)
     e = int(e/10**(5-len(e_spec)))
@@ -329,6 +421,9 @@ def parse_grid(*grid_elements, figs=3):
         >>> parse_grid('176/224711')
         (522400, 171100)
 
+        >>> parse_grid('176,224,711')
+        (522400, 171100)
+
         Charlbury Station
         >>> parse_grid('A:164/352194')
         (435200, 219400)
@@ -365,12 +460,27 @@ def parse_grid(*grid_elements, figs=3):
         >>> parse_grid('B:368/OL47W', 723, 112)
         (272300, 711200)
 
+   A map sheet with a grid ref that does not actually coincide will raise a 
+   GridSheetMismatch error
 
-    If there's no matching input then a ValueError is raised.
-    >>> parse_grid('Somewhere in London')
-    Traceback (most recent call last):
-    ...
-    ValueError: I can't read a grid reference from this -> Somewhere in London
+        >>> parse_grid('176/924011')
+        Traceback (most recent call last):
+        ...
+        GridSheetMismatch: Grid point (592400,201100) is not on sheet A:176
+   
+   A map sheet that does not exist will raise an UndefinedSheet error
+
+        >>> parse_grid('B:999/924011')
+        Traceback (most recent call last):
+        ...
+        UndefinedSheet: Sheet B:999 is not known here.
+
+
+    If there's no matching input then a GridGarbage error is raised.
+        >>> parse_grid('Somewhere in London')
+        Traceback (most recent call last):
+        ...
+        GridGarbage: I can't read a grid reference from this -> Somewhere in London
 
 
     """
@@ -386,17 +496,23 @@ def parse_grid(*grid_elements, figs=3):
         s = ' '.join(str(x) for x in grid_elements)
 
     # normal case : TQ 123 456 etc
-    offsets = get_grid_square_offsets(s)
+    offsets = _get_grid_square_offsets(s)
     if offsets is not None:
         if len(s) == 2: # ie s must have been a valid square
             return offsets
 
-        en_tuple = get_eastings_northings(s[2:])
+        en_tuple = _get_eastings_northings(s)
         if en_tuple is not None:
             return (en_tuple[0]+offsets[0], en_tuple[1]+offsets[1])
+    
+    # just a pair of numbers
+    if len(grid_elements) == 2:
+        if _is_number(grid_elements[0]):
+            if _is_number(grid_elements[1]):
+                return tuple(grid_elements)
 
     # sheet id instead of grid sq
-    m = re.match(r'([A-Z0-9:./]+)\D+(\d+\D*\d+)', s, re.IGNORECASE)
+    m = re.match(r'([A-Z0-9:./]+)\D+(\d+\D*\d+)$', s, re.IGNORECASE)
     if m is not None:
 
         sheet, numbers = m.group(1,2)
@@ -408,25 +524,32 @@ def parse_grid(*grid_elements, figs=3):
         if sheet in map_locker:
             map = map_locker[sheet] 
             ll_corner = map['bbox'][0]  
-            (e, n) = get_eastings_northings(numbers)
+            (e, n) = _get_eastings_northings(numbers)
             easting  = ll_corner[0] + (e - ll_corner[0]) % MINOR_GRID_SQ_SIZE
             northing = ll_corner[1] + (n - ll_corner[1]) % MINOR_GRID_SQ_SIZE
-            if 0 == winding_number(easting, northing, map['polygon']):
-                print("Grid reference is not on sheet {}".format(sheet), file=sys.stderr)
-                print("bbox: {}".format(' '.join(str(x) for x in map['bbox'])), file=sys.stderr)
-                return None
+            if 0 == _winding_number(easting, northing, map['polygon']):
+                raise GridSheetMismatch(sheet,easting,northing)
 
             return (easting, northing)
+        else:
+            raise UndefinedSheet(sheet)
 
-    # just a pair of numbers
-    if len(grid_elements) == 2:
-        if is_number(grid_elements[0]):
-            if is_number(grid_elements[1]):
-                return tuple(grid_elements)
+    raise GridGarbage(s)
 
-    raise ValueError("I can't read a grid reference from this -> {}".format(s))
+def _is_number(s):
+    """Is this a number I see before me?
 
-def is_number(s):
+    >>> _is_number(3.141529)
+    True
+
+    >>> _is_number("")
+    False
+
+    >>> _is_number("TA")
+    False
+
+    """
+
     try:
         float(s)
         return True
@@ -434,13 +557,13 @@ def is_number(s):
         return False
 
 
-def get_grid_square_offsets(sq):
+def _get_grid_square_offsets(sq):
     """Get (e,n) for ll corner of a grid square
 
-    >>> get_grid_square_offsets('SV')
+    >>> _get_grid_square_offsets('SV')
     (0, 0)
 
-    >>> get_grid_square_offsets('TQ 345 452')
+    >>> _get_grid_square_offsets('TQ 345 452')
     (500000, 100000)
 
     """
@@ -464,23 +587,31 @@ def get_grid_square_offsets(sq):
         MAJOR_GRID_SQ_SIZE * Y - MAJOR_GRID_SQ_NORTHING_OFFSET + MINOR_GRID_SQ_SIZE * y
     )
 
-def get_eastings_northings(s):
+def _get_eastings_northings(s):
     """Extract easting and northing from GR string.
 
-    >>> get_eastings_northings(' 12345 67890')
+    >>> _get_eastings_northings(' 12345 67890')
     (12345, 67890)
-    >>> get_eastings_northings(' 234 567')
+    >>> _get_eastings_northings(' 234 567')
     (23400, 56700)
     """
-    numbers = ''.join(x for x in s if x.isdigit())
-    figs = len(numbers)
-    if figs not in [2,4,6,8,10]:
+    t = re.findall(r'(\d+)',s)
+    if len(t) == 2:
+        (e,n) = t
+    elif len(t) == 1:
+        gr = t[0]
+        f = len(gr)
+        if f in [2,4,6,8,10]:
+            f = int(f/2)
+            e,n = (gr[:f], gr[f:])
+        else:
+            return None
+    else:
         return None
 
-    figs = int(figs/2)
-    e = int(numbers[0:figs])*10**(5-figs)
-    n = int(numbers[figs: ])*10**(5-figs)
-    return (e, n)
+    figs = min(5,max(len(e), len(n)))
+    return( int(e)*10**(5-figs), int(n)*10**(5-figs) )
+
 
 if __name__ == "__main__":
     import doctest
