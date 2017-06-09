@@ -1,6 +1,31 @@
-grid-banger
-===========
+osgb
+====
 
-A Python class for working with British OSGB grid references
+Python routines for working with British OSGB grid references.
 
-Toby Thurston -- 01 Dec 2014 
+The functions in this module convert from OSGB grid references to and from GPS Lat/Lon with high precision.
+
+# usage
+
+    import osgb
+
+    (lat, lon) = osgb.grid_to_ll(324231, 432525)
+    (easting, northing) = osgb.ll_to_grid(52.132341, -2.43256)
+
+    grid_ref = osgb.format_grid(324231, 231423)
+    (easting, northing) = osgb.parse_grid("TQ213455")
+
+Toby Thurston -- 09 Jun 2017 
+
+
+# Contents
+
+    osgb/convert.py
+    osgb/gridder.py
+    osgb/mapping.data
+    osgb/mapping.py
+    osgb/ostn02.data
+    scripts/bngl
+    scripts/make_mapping_data
+    test/bench.py
+    test/osgb_os_data.py 

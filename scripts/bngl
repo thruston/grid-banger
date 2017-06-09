@@ -2,78 +2,89 @@
 
 """Convert coordinates.
 
-Toby Thurston -- 15 Mar 2016 
+Toby Thurston -- 15 Mar 2016
 """
+# allow free variable names and the occasional trailing whitespace character
+# pylint: disable=C0103, C0303
+
 import argparse
+import subprocess
+
 import osgb
-import re
-import webbrowser
 
-def is_float(s):
+def get_likely_float(possible_number):
+    "Is this supposed to be a lat or lon coordinates?"
     try:
-        float(s)
-        return True
+        actual_number = float(possible_number)
     except ValueError:
-        return False
+        return None
 
-alphabet = ' 1234567890-.+/:ABCDEFGHJKLMNOPQRSTUVWXYZ' # no I in this
+    if -20 < actual_number < 70: # Useful Lat is between 49 and 65, useful Lon between -9 and 2
+        return actual_number     # and it's OK to return 0 - see below
+
+    return None
+
+alphabet = ' 1234567890-.+/:ABCDEFGHJKLMNOPQRSTUVWXYZabcdef' # there is no I in this
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--show", action='store_true')
-    parser.add_argument("grid_or_ll_strings", 
-                         type=str, 
-                         nargs='*',
-                         default=['TW','101','203'],
-                         help="A grid reference or lat/lon string")
+    parser.add_argument("grid_or_ll_strings", type=str, nargs='*', default=['SP', '101', '203'], 
+                        help="A grid reference string or lat/lon pair")
     args = parser.parse_args()
-  
-    input = ' '.join(x.upper() for x in args.grid_or_ll_strings)
-    input = ''.join(x for x in input if x in alphabet)
 
-    got_gridref = True # we assume this
+    agenda = ' '.join(args.grid_or_ll_strings)
+    agenda = ''.join(x for x in agenda if x in alphabet) # and remove unwanted characters 
 
-    m = re.match(r'(\S+)\s+(\S+)', input)
-    if m:
-        a,b = m.group(1,2)
-        if is_float(a) and is_float(b):
-            a = float(a)
-            b = float(b)
-            if abs(a) < 70 and abs(b) < 70:
-                got_gridref = False
+    floats = list(get_likely_float(x) for x in agenda.split())
 
-    if got_gridref:
-        (e,n) = osgb.parse_grid(input)
-        (lat,lon) = osgb.grid_to_ll(e,n)
-        (oe, on) = (e, n)
-        (olat,olon) = osgb.grid_to_ll(e,n,'OSGB36')
-
-    else:
-        (lon, lat) = sorted((a,b)) # lat > lon for all GB
-        (e,n) = osgb.ll_to_grid(lat, lon)
+    # if the arguments consists of just two likely looking numbers...
+    # You can't just say "all(floats)" because 0 is a valid Longitude
+    if len(floats) == 2 and all(x is not None for x in floats):
+        (lon, lat) = sorted(floats) # Lon is always less than Lat in OSGB
+        (e, n) = osgb.ll_to_grid(lat, lon)
         (olat, olon) = (lat, lon)
-        (oe,on) = osgb.ll_to_grid(lat, lon, 'OSGB36')
-    
-    grid = osgb.format_grid(e,n)
-    maps = osgb.sheet_list(e,n)
-    if len(maps) > 0:
+        (oe, on) = osgb.ll_to_grid(lat, lon, 'OSGB36')
+
+    else:
+        (e, n) = osgb.parse_grid(agenda)
+        (lat, lon) = osgb.grid_to_ll(e, n)
+        (oe, on) = (e, n)
+        (olat, olon) = osgb.grid_to_ll(e, n, 'OSGB36')
+
+    try:
+        grid = osgb.format_grid(e, n)
+        maps = osgb.sheet_list(e, n)
+    except osgb.gridder.GridderFailure as oggf:
+        #print(oggf)
+        grid = '??'
+        maps = None
+
+    if maps:
         map_string = 'on sheets {}'.format(', '.join(maps))
     else:
         map_string = '(not covered by any OSGB map)'
 
-    print('WGS84  {:.8g} {:.7g} == {:.3f} {:.3f} == {} {}'.format( lat, lon, e, n, grid, map_string))
+    print('WGS84  {:.8g} {:.7g}'.format(lat, lon), end=' ')
+    print('== {:.3f} {:.3f}'.format(e, n), end=' ')
+    print('== {} {}'.format(grid, map_string))
 
-    grid = osgb.format_grid(oe,on)
-    maps = osgb.sheet_list(oe,on)
-    if len(maps) > 0:
+    try:
+        grid = osgb.format_grid(oe, on)
+        maps = osgb.sheet_list(oe, on)
+    except osgb.gridder.GridderFailure as oggf:
+        #print(oggf)
+        grid = '??'
+        maps = None
+    if maps:
         map_string = 'on sheets {}'.format(', '.join(maps))
     else:
         map_string = '(not covered by any OSGB map)'
 
-    print('OSGB36 {:.8g} {:.7g} == {:.3f} {:.3f} == {} {}'.format( olat, olon, oe, on, grid, map_string))
+    print('OSGB36 {:.8g} {:.7g}'.format(olat, olon), end=' ')
+    print('== {:.3f} {:.3f}'.format(oe, on), end=' ')
+    print('== {} {}'.format(grid, map_string))
 
     if args.show:
         url = 'http://www.streetmap.co.uk/map.srf?x={:06d}&y={:06d}&z=3'.format(int(e), int(n))
-        #print(url)
-        webbrowser.open(url)
-
+        rc = subprocess.check_call(["/usr/bin/open", url])
