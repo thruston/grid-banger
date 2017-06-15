@@ -6,7 +6,6 @@ Toby Thurston -- 13 Mar 2016
 
 import math
 import pkgutil
-from osgb.gridder import format_grid
 
 __all__ = ['grid_to_ll', 'll_to_grid']
 
@@ -162,10 +161,7 @@ def ll_to_grid(lat, lon, model='WGS84', rounding=-1):
     (-157250.0, 186110.0)
 
     If you want the result presented in a more traditional grid reference
-    format you should pass the results to the grid formatting routine 
-
-        >>> format_grid(ll_to_grid(51.5,-0.0833))
-        'TQ 331 796'
+    format you should pass the results to osgb.format_grid()
 
     ll_to_grid() also takes an optional argument that sets the ellipsoid
     model to use.  This defaults to `WGS84', the name of the normal model

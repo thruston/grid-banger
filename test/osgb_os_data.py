@@ -78,7 +78,7 @@ for k in sorted(test_input):
 tests = len(test_input)
 bad   = len(errors)
 ok    = tests-bad
-print('{}/{} conversions are accurate to within 0.5 mm'.format(ok, tests))
+print('{}/{} standard OS conversions are accurate to within 0.5 mm'.format(ok, tests))
 
 for e in sorted(errors, key=lambda e:abs(e[2])):
     k, type, delta = e
