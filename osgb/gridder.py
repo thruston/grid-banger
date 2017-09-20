@@ -530,8 +530,7 @@ def parse_grid(*grid_elements, figs=3):
 
     # probably now a sheet name rather than a SQ number
     # so lets try to decompose the string version of the input
-    sheet_ref = re.compile(r'^([A-Z]:)?([0-9NEWSOL/]+?)(\.[a-z]+)?(?:[ -/.]([ 0-9]+))?$')
-    ok = sheet_ref.match(grid_string) 
+    ok = re.match(r'^([A-Z]:)?([0-9NEWSOL/]+?)(\.[a-z]+)?(?:[ -/.]([ 0-9]+))?$', grid_string)
     if not ok:
         raise GridGarbage(grid_string)
 

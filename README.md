@@ -5,6 +5,10 @@ Python routines for working with British OSGB grid references.
 
 The functions in this module convert from OSGB grid references to and from GPS Lat/Lon with high precision.
 
+# install
+
+    python3 setup.py install
+
 # usage
 
     import osgb
@@ -20,6 +24,7 @@ Toby Thurston -- 09 Jun 2017
 
 # Contents
 
+    setup.py
     osgb/convert.py
     osgb/gridder.py
     osgb/mapping.data

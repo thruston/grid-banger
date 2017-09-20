@@ -47,6 +47,7 @@ if __name__ == "__main__":
         (oe, on) = osgb.ll_to_grid(lat, lon, 'OSGB36')
 
     else:
+        print('>>', agenda)
         (e, n) = osgb.parse_grid(agenda)
         (lat, lon) = osgb.grid_to_ll(e, n)
         (oe, on) = (e, n)
