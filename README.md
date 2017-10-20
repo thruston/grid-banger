@@ -1,9 +1,21 @@
 osgb
 ====
 
-Python routines for working with British OSGB grid references.
+Python routines for working with grid references as defined by the Ordnance
+Survey of Great Britain (OSGB).
 
-The functions in this module convert from OSGB grid references to and from GPS Lat/Lon with high precision.
+Toby Thurston -- 08 Oct 2017 
+
+The functions in this module convert from OSGB grid references to and from GPS
+Lat/Lon with using OSGB formulae and the OSTN02 data set.  Conversions are
+accurate to approximately +/- 1mm.  The scope of OSGB is limited to the same
+coverage as the Ordnance Survey maps:  England, Wales, Scotland, and the Isle
+of Man, but not Northern Ireland, nor the Channel Islands.   
+
+The implementation uses the Ordnance Survey's high-precision dataset called
+OSTN02.  This dataset is freely available for public use, but remains © Crown
+copyright, Ordnance Survey and the Ministry of Defence (MOD) 2002. All rights
+reserved.
 
 # install
 
@@ -19,10 +31,7 @@ The functions in this module convert from OSGB grid references to and from GPS L
     grid_ref = osgb.format_grid(324231, 231423)
     (easting, northing) = osgb.parse_grid("TQ213455")
 
-Toby Thurston -- 09 Jun 2017 
-
-
-# Contents
+# contents
 
     setup.py
     osgb/convert.py
@@ -32,5 +41,8 @@ Toby Thurston -- 09 Jun 2017
     osgb/ostn02.data
     scripts/bngl
     scripts/make_mapping_data
-    test/bench.py
+    test/bench_mark.py
     test/osgb_os_data.py 
+
+
+

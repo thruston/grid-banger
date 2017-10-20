@@ -1,9 +1,11 @@
+# coding: utf-8
+# pylint: disable=C0103,C0303
 """Parse and format OSGB grid reference strings
 
-Toby Thurston -- 09 Jun 2017
+Toby Thurston -- 08 Oct 2017 
 
 """
-# pylint: disable=C0103,C0303
+from __future__ import unicode_literals, print_function, division
 
 import math
 import re
@@ -45,7 +47,7 @@ class GridGarbage(GridParseFailure):
     """
     def __init__(self, spam):
         self.spam = spam
-        super().__init__()
+        super(GridGarbage, self).__init__()
 
     def __str__(self):
         return "I can't read a grid reference from this -> {}".format(self.spam)
@@ -64,7 +66,7 @@ class GridSheetMismatch(GridParseFailure):
         self.sheet = sheet
         self.easting = easting
         self.northing = northing
-        super().__init__()
+        super(GridSheetMismatch, self).__init__()
 
     def __str__(self):
         return "Grid point ({}, {})".format(self.easting, self.northing) \
@@ -80,7 +82,7 @@ class UndefinedSheet(GridParseFailure):
     """
     def __init__(self, sheet):
         self.sheet = sheet
-        super().__init__()
+        super(UndefinedSheet, self).__init__()
 
     def __str__(self):
         return "Sheet {} is not known here.".format(self.sheet)
@@ -95,7 +97,7 @@ class FaultyForm(GridFormatFailure):
     """
     def __init__(self, form):
         self.form = form
-        super().__init__()
+        super(FaultyForm, self).__init__()
 
     def __str__(self):
         return "This form argument was not matched --> form='{}'".format(self.form)
@@ -111,12 +113,12 @@ class FarFarAway(GridFormatFailure):
     def __init__(self, easting, northing):
         self.easting = easting
         self.northing = northing
-        super().__init__()
+        super(GridFormatFailure, self).__init__()
 
     def __str__(self):
         return "The spot with coordinates" \
                 + " " \
-                + "({}, {})".format(self.easting, self.northing) \
+                + "({:g}, {:g})".format(self.easting, self.northing) \
                 + " " \
                 + "is too far from the OSGB grid"
 
@@ -127,8 +129,8 @@ def sheet_list(easting, northing, series='ABCHJ'):
     The optional argument "series" controls which maps are included in the 
     list.  The default is to include maps from all defined series.
 
-    >>> sheet_list(438710.908, 114792.248, series='AB')
-    ['A:196', 'B:OL22E']
+    >>> print(' '.join(sheet_list(438710.908, 114792.248, series='AB')))
+    A:196 B:OL22E
 
     Currently the series included are:
 
@@ -143,15 +145,15 @@ def sheet_list(easting, northing, series='ABCHJ'):
     themselves; instead the maps have titles.  You can use the numbers
     returned as an index to the maps data to find the appropriate title.
 
-    >>> sheet_list(314159, 271828)
-    ['A:136', 'A:148', 'B:200E', 'B:214E', 'C:128']
+    >>> print(' '.join(sheet_list(314159, 271828)))
+    A:136 A:148 B:200E B:214E C:128
 
     You can restrict the list to certain series.
     So if you only want Explorer maps use: series='B', and if you
     want only Explorers and Landrangers use: series='AB', and so on. 
 
-    >>> sheet_list(651537, 313135, series='A')
-    ['A:134']
+    >>> print(''.join(sheet_list(651537, 313135, series='A')))
+    A:134
 
     If the (easting, northing) pair is not covered by any map sheet you'll get 
     an empty list
@@ -196,22 +198,24 @@ def format_grid(easting, northing=None, form='SS EEE NNN'):
     grid reference with two letters and two sets of three numbers, like this
     `SU 387 147'.  
 
-    >>> format_grid(438710.908, 114792.248)
-    'SU 387 147'
+    >>> print(format_grid(438710.908, 114792.248))
+    SU 387 147
 
     If you want the individual components, apply split() to it.
 
-    >>> format_grid(438710.908, 114792.248).split()
-    ['SU', '387', '147']
+    >>> print('-'.join(format_grid(438710.908, 114792.248).split()))
+    SU-387-147
+
+    and note that the results are strings not integers.
 
     The format grid routine takes three optional keyword arguments to control the
     form of grid reference returned.  This should be a hash reference with
     one or more of the keys shown below (with the default values).
 
-    >>> format_grid(438710.908, 114792.248, form='SS EEE NNN')
-    'SU 387 147'
-    >>> format_grid(438710.908, 114792.248, form='SS EEEEE NNNNN')
-    'SU 38710 14792'
+    >>> print(format_grid(438710.908, 114792.248, form='SS EEE NNN'))
+    SU 387 147
+    >>> print(format_grid(438710.908, 114792.248, form='SS EEEEE NNNNN'))
+    SU 38710 14792
 
     Note that rather than being rounded, the easting and northing are truncated
     (as the OS system demands), so the grid reference refers to the lower left
@@ -220,43 +224,43 @@ def format_grid(easting, northing=None, form='SS EEE NNN'):
 
     An optional keyword argument "form" controls the format of the grid reference.  
 
-    >>> format_grid(438710.908, 114792.248, form='SS')
-    'SU'
-    >>> format_grid(438710.908, 114792.248, form='SSEN')
-    'SU31'
-    >>> format_grid(438710.908, 114792.248, form='SSEENN')
-    'SU3814'
-    >>> format_grid(438710.908, 114792.248, form='SSEEENNN')
-    'SU387147'
-    >>> format_grid(438710.908, 114792.248, form='SSEEEENNNN')
-    'SU38711479'
-    >>> format_grid(438710.908, 114792.248, form='SSEEEEENNNNN')
-    'SU3871014792'
-    >>> format_grid(438710.908, 114792.248, form='SS EN')
-    'SU 31'
-    >>> format_grid(438710.908, 114792.248, form='SS EE NN')
-    'SU 38 14'
-    >>> format_grid(438710.908, 114792.248, form='SS EEE NNN')
-    'SU 387 147'
-    >>> format_grid(438710.908, 114792.248, form='SS EEEE NNNN')
-    'SU 3871 1479'
-    >>> format_grid(400010.908, 114792.248, form='SS EEEEE NNNNN')
-    'SU 00010 14792'
+    >>> print(format_grid(438710.908, 114792.248, form='SS'))
+    SU
+    >>> print(format_grid(438710.908, 114792.248, form='SSEN'))
+    SU31
+    >>> print(format_grid(438710.908, 114792.248, form='SSEENN'))
+    SU3814
+    >>> print(format_grid(438710.908, 114792.248, form='SSEEENNN'))
+    SU387147
+    >>> print(format_grid(438710.908, 114792.248, form='SSEEEENNNN'))
+    SU38711479
+    >>> print(format_grid(438710.908, 114792.248, form='SSEEEEENNNNN'))
+    SU3871014792
+    >>> print(format_grid(438710.908, 114792.248, form='SS EN'))
+    SU 31
+    >>> print(format_grid(438710.908, 114792.248, form='SS EE NN'))
+    SU 38 14
+    >>> print(format_grid(438710.908, 114792.248, form='SS EEE NNN'))
+    SU 387 147
+    >>> print(format_grid(438710.908, 114792.248, form='SS EEEE NNNN'))
+    SU 3871 1479
+    >>> print(format_grid(400010.908, 114792.248, form='SS EEEEE NNNNN'))
+    SU 00010 14792
 
     You can't leave out the SS, you can't have N before E, and there must be
     the same number of Es and Ns.
 
     There are two other special formats:
 
-    >>> format_grid(438710.908, 114792.248, form='TRAD')
-    'SU 387 147'
-    >>> format_grid(438710.908, 114792.248, form='GPS')
-    'SU 38710 14792'
+    >>> print(format_grid(438710.908, 114792.248, form='TRAD'))
+    SU 387 147
+    >>> print(format_grid(438710.908, 114792.248, form='GPS'))
+    SU 38710 14792
 
     The format can be given as upper case or lower case or a mixture.  
     
-    >>> format_grid(438710.908, 114792.248, form='trad')
-    'SU 387 147'
+    >>> print(format_grid(438710.908, 114792.248, form='trad'))
+    SU 387 147
 
     but in general the form argument must match "SS E* N*" (spaces optional)
 
@@ -265,24 +269,24 @@ def format_grid(easting, northing=None, form='SS EEE NNN'):
     ...
     FaultyForm: This form argument was not matched --> form='TT'
 
-    >>> format_grid(314159, 271828, form='SS')
-    'SO'
-    >>> format_grid(0, 0, form='SS')
-    'SV'
-    >>> format_grid(432800, 1250000, form='SS')
-    'HP'
+    >>> print(format_grid(314159, 271828, form='SS'))
+    SO
+    >>> print(format_grid(0, 0, form='SS'))
+    SV
+    >>> print(format_grid(432800, 1250000, form='SS'))
+    HP
 
     The arguments can be negative...
 
-    >>> format_grid(-5, -5, form='SS')
-    'WE'
+    >>> print(format_grid(-5, -5, form='SS'))
+    WE
 
     But must not be too far away from the grid...
 
     >>> format_grid(-1e12, -5)
     Traceback (most recent call last):
     ...
-    FarFarAway: The spot with coordinates (-1000000000000.0, -5) is too far from the OSGB grid
+    FarFarAway: The spot with coordinates (-1e+12, -5) is too far from the OSGB grid
 
 
     """
@@ -326,7 +330,7 @@ def format_grid(easting, northing=None, form='SS EEE NNN'):
            + space_a + '{0:0{1}d}'.format(e, len(e_spec)) \
            + space_b + '{0:0{1}d}'.format(n, len(n_spec))
 
-def parse_grid(*grid_elements, figs=3):
+def parse_grid(*grid_elements, **kwargs):
     """Parse a grid reference from a range of inputs.
 
     The parse_grid routine extracts a (easting, northing) pair from a
@@ -335,7 +339,7 @@ def parse_grid(*grid_elements, figs=3):
 
     The arguments should be in one of the following three forms
 
-    •   A single string representing a grid reference
+    -   A single string representing a grid reference
 
         >>> parse_grid("TA 123 678")
         (512300, 467800)
@@ -391,7 +395,7 @@ def parse_grid(*grid_elements, figs=3):
         (-296419, 916564)
 
 
-     •  A two or three element list representing a grid reference
+     -  A two or three element list representing a grid reference
 
         >>> parse_grid('TA', 0, 0)
         (500000, 400000)
@@ -427,7 +431,7 @@ def parse_grid(*grid_elements, figs=3):
         hectometres as in a traditional grid reference. The maximum is 5
         and the minimum is the length of the longer of easting or northing.
 
-    •   A string or a list representing a map and a local grid reference, 
+    -   A string or a list representing a map and a local grid reference, 
         corresponding to the following examples:
 
         Caesar's Camp
@@ -505,6 +509,11 @@ def parse_grid(*grid_elements, figs=3):
 
     """
 
+    try:
+        figs = int(kwargs['figs'])
+    except (KeyError, ValueError):
+        figs = 3
+
     if len(grid_elements) == 3:
         sq, ee, nn = grid_elements
         figs = min(5, max(figs, len(str(ee)), len(str(nn))))
@@ -547,7 +556,7 @@ def parse_grid(*grid_elements, figs=3):
     if sheet not in map_locker:
         raise UndefinedSheet(sheet)
 
-    easting = map_locker[sheet]['bbox'][0][0]   # start with SW corner
+    easting = map_locker[sheet]['bbox'][0][0]   # start with SW corner
     northing = map_locker[sheet]['bbox'][0][1]
 
     if numbers is not None:
