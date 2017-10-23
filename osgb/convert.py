@@ -1,6 +1,6 @@
 """Conversion between latitude/longitude and OSGB grid references.
 
-Toby Thurston -- 08 Oct 2017 
+Toby Thurston -- 23 Oct 2017 
 
 """
 # pylint: disable=C0103, C0301
@@ -12,12 +12,11 @@ import struct
 
 __all__ = ['grid_to_ll', 'll_to_grid']
 
-# The ellipsoid model for project to and from the grid
+# The ellipsoid models for projection to and from the grid
 ELLIPSOID_MODELS = {
     'WGS84': (6378137.000, 6356752.31424518, 0.0016792203863836474, 0.006694379990141316996137233540),
     'OSGB36': (6377563.396, 6356256.909, 0.0016732203289875152, 0.006670540074149231821114893873561),
 }
-
 
 # The defining constants for the OSGB grid
 ORIGIN_LAMBDA = -2 / 57.29577951308232087679815481410517
@@ -29,15 +28,15 @@ CONVERGENCE_FACTOR = 0.9996012717
 OSTN_DATA = pkgutil.get_data("osgb", "ostn02.data").split(b'\n')
 ostn_cache = dict()
 
-class ConvertFailure(Exception):
-    """Parent class for Convert exceptions"""
+class Error(Exception):
+    """Parent class for exceptions in this module"""
     pass
 
-class UndefinedModel(ConvertFailure):
+class UndefinedModel(Error):
     """Raised when the model given is undefined
 
     Attributes:
-        spam
+        spam - the name of the unknown model
 
     """
     def __init__(self, spam):
@@ -110,14 +109,14 @@ def grid_to_ll(easting, northing, model='WGS84'):
         return (os_lat, os_lon)
 
     # If we want WGS84 LL, we must adjust to pseudo grid if we can
-    shifts = find_OSTN02_shifts_at(easting, northing)
+    shifts = _find_OSTN02_shifts_at(easting, northing)
     if shifts is not None:
         in_ostn02_polygon = True
         x = easting - shifts[0]
         y = northing - shifts[1]
         last_shifts = shifts[:]
         for _ in range(20):
-            shifts = find_OSTN02_shifts_at(x, y)
+            shifts = _find_OSTN02_shifts_at(x, y)
 
             if shifts is None:
                 # we have been shifted off the edge
@@ -136,7 +135,7 @@ def grid_to_ll(easting, northing, model='WGS84'):
             return _reverse_project_onto_ellipsoid(x, y, 'WGS84')
 
     # If we get here, we must use the Helmert approx
-    return shift_ll_from_osgb36_to_wgs84(os_lat, os_lon)
+    return _shift_ll_from_osgb36_to_wgs84(os_lat, os_lon)
 
 
 def ll_to_grid(lat, lon, model='WGS84', rounding=-1):
@@ -265,14 +264,14 @@ def ll_to_grid(lat, lon, model='WGS84', rounding=-1):
     easting, northing = _project_onto_grid(lat, lon, model)
 
     if model == 'WGS84':
-        shifts = find_OSTN02_shifts_at(easting, northing)
+        shifts = _find_OSTN02_shifts_at(easting, northing)
         if shifts is not None:
             easting += shifts[0]
             northing += shifts[1]
             if rounding < 0:
                 rounding = 3
         else:
-            (osgb_lat, osgb_lon) = shift_ll_from_wgs84_to_osgb36(lat, lon)
+            (osgb_lat, osgb_lon) = _shift_ll_from_wgs84_to_osgb36(lat, lon)
             (easting, northing) = _project_onto_grid(osgb_lat, osgb_lon, 'OSGB36')
             if rounding < 0:
                 rounding = 0
@@ -399,13 +398,13 @@ def _reverse_project_onto_ellipsoid(easting, northing, model):
     return (phi * 57.29577951308232087679815481410517,
             lam * 57.29577951308232087679815481410517)
 
-def get_ostn_pair(x, y):
+def _get_ostn_pair(x, y):
     """Get the shifts for (x, y) and (x+1, y) from the OSTN02 array.
 
-    >>> get_ostn_pair(80, 1)
+    >>> _get_ostn_pair(80, 1)
     [91.902, -81.569, 91.916, -81.563]
 
-    >>> get_ostn_pair(331, 431)
+    >>> _get_ostn_pair(331, 431)
     [95.383, -72.19, 95.405, -72.196]
     """
     leading_zeros = int(OSTN_DATA[y][0:3])
@@ -427,10 +426,10 @@ def get_ostn_pair(x, y):
 
     return shifts
 
-def find_OSTN02_shifts_at(easting, northing):
+def _find_OSTN02_shifts_at(easting, northing):
     """Get the OSTN02 shifts at a pseudo grid reference.
 
-    >>> print("{:.5f} {:.5f}".format(*find_OSTN02_shifts_at(331439.160, 431992.943)))
+    >>> print("{:.5f} {:.5f}".format(*_find_OSTN02_shifts_at(331439.160, 431992.943)))
     95.39242 -72.15156
 
     """
@@ -450,7 +449,7 @@ def find_OSTN02_shifts_at(easting, northing):
     lo_key = e_index + n_index * 701
 
     if lo_key not in ostn_cache:
-        ostn_cache[lo_key] = get_ostn_pair(e_index, n_index)
+        ostn_cache[lo_key] = _get_ostn_pair(e_index, n_index)
 
     lo_shifts = ostn_cache[lo_key]
     if lo_shifts is None:
@@ -459,7 +458,7 @@ def find_OSTN02_shifts_at(easting, northing):
     hi_key = lo_key + 701
 
     if hi_key not in ostn_cache:
-        ostn_cache[hi_key] = get_ostn_pair(e_index, n_index+1)
+        ostn_cache[hi_key] = _get_ostn_pair(e_index, n_index+1)
 
     hi_shifts = ostn_cache[hi_key]
     if hi_shifts is None:
@@ -478,17 +477,16 @@ def find_OSTN02_shifts_at(easting, northing):
         f0*lo_shifts[1] + f1*lo_shifts[3] + f2*hi_shifts[1] + f3*hi_shifts[3]
     )
 
-def llh_to_cartesian(lat, lon, H, model):
+def _llh_to_cartesian(lat, lon, H, model):
     '''Approximate conversion from spherical to plane coordinates.
 
     Used as part of the Helmert transformation used outside the OSTN02 area.
 
-    >>> (x, y, z) =  llh_to_cartesian(53, -3, 10, 'OSGB36')
-    >>> cartesian_to_llh(x, y, z, 'OSGB36')
-    (53.0, -3.0, 9.999999999068677)
+    >>> _llh_to_cartesian(53, -3, 10, 'OSGB36')
+    (3841039.2016489906, -201300.3346975291, 5070178.453880734)
 
-    >>> (x, y, z) =  llh_to_cartesian(52, 1, 30, 'WGS84')
-    >>> cartesian_to_llh(x, y, z, 'WGS84')
+    >>> (x, y, z) =  _llh_to_cartesian(52, 1, 30, 'WGS84')
+    >>> _cartesian_to_llh(x, y, z, 'WGS84')
     (52.0, 1.0, 29.999999999068677)
 
     '''
@@ -510,10 +508,13 @@ def llh_to_cartesian(lat, lon, H, model):
         ((1-e2)*nu+H)*sp
     )
 
-def cartesian_to_llh(x, y, z, model):
+def _cartesian_to_llh(x, y, z, model):
     '''Approximate conversion from plane to spherical coordinates.
 
     Used as part of the Helmert transformation used outside the OSTN02 area.
+
+    >>> _cartesian_to_llh(3841039.2016489909, -201300.3346975291, 5070178.453880735, 'OSGB36')
+    (53.0, -3.0, 10.0)
     '''
 
     a, _, _, e2 = ELLIPSOID_MODELS[model]
@@ -536,7 +537,7 @@ def cartesian_to_llh(x, y, z, model):
         p/math.cos(phi) - nu
     )
 
-def small_Helmert_transform_for_OSGB(direction, xa, ya, za):
+def _small_Helmert_transform_for_OSGB(direction, xa, ya, za):
     '''Transform 3d planar coordinates to approximate OSGB36 to WGS84.
 
     Formulae as supplied by the OSGB.  Designed for +/- 5m accuracy in
@@ -557,27 +558,27 @@ def small_Helmert_transform_for_OSGB(direction, xa, ya, za):
     zb = tz - ry*xa + rx*ya + sp*za
     return (xb, yb, zb)
 
-def shift_ll_from_osgb36_to_wgs84(lat, lon):
+def _shift_ll_from_osgb36_to_wgs84(lat, lon):
     '''Approximate conversion of OGSB sperical coordinates to WGS84.
 
     Used as a last resort by grid_to_ll
     '''
-    (xa, ya, za) = llh_to_cartesian(lat, lon, 0, 'OSGB36')
-    (xb, yb, zb) = small_Helmert_transform_for_OSGB(-1, xa, ya, za)
-    (latx, lonx, _) = cartesian_to_llh(xb, yb, zb, 'WGS84')
+    (xa, ya, za) = _llh_to_cartesian(lat, lon, 0, 'OSGB36')
+    (xb, yb, zb) = _small_Helmert_transform_for_OSGB(-1, xa, ya, za)
+    (latx, lonx, _) = _cartesian_to_llh(xb, yb, zb, 'WGS84')
     return (latx, lonx)
 
 
-def shift_ll_from_wgs84_to_osgb36(lat, lon):
+def _shift_ll_from_wgs84_to_osgb36(lat, lon):
     '''Approximate conversion of WGS84 spherical coordinates to OSGB36.
 
     Used as a last resort by ll_to_grid
     '''
-    (xa, ya, za) = llh_to_cartesian(lat, lon, 0, 'WGS84')
-    (xb, yb, zb) = small_Helmert_transform_for_OSGB(+1, xa, ya, za)
-    (latx, lonx, _) = cartesian_to_llh(xb, yb, zb, 'OSGB36')
+    (xa, ya, za) = _llh_to_cartesian(lat, lon, 0, 'WGS84')
+    (xb, yb, zb) = _small_Helmert_transform_for_OSGB(+1, xa, ya, za)
+    (latx, lonx, _) = _cartesian_to_llh(xb, yb, zb, 'OSGB36')
     return (latx, lonx)
 
 if __name__ == "__main__":
     import doctest
-    doctest.testmod()
+    doctest.testmod(verbose=False)

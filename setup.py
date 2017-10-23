@@ -6,7 +6,7 @@ import distutils.core
 distutils.core.setup(
     name='osgb',
     version='0.0.1',
-    description='OSGB Conversion library',
+    description='OSGB Conversion library based on OSTN02',
     license='MIT Licence',
     author='Toby Thurston',
     author_email='toby@cpan.org',
@@ -16,6 +16,7 @@ distutils.core.setup(
     scripts=['scripts/bngl'],
     classifiers=[
         "Programming Language :: Python",
+        "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 3",
     ],
 )

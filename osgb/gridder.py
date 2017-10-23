@@ -23,17 +23,17 @@ MAJOR_GRID_SQ_NORTHING_OFFSET = 1 * MAJOR_GRID_SQ_SIZE
 MAX_GRID_SIZE = MINOR_GRID_SQ_SIZE * len(GRID_SQ_LETTERS)
 
 
-class GridderFailure(Exception):
+class Error(Exception):
     """Parent class for Gridder exceptions"""
     pass
 
 
-class GridParseFailure(GridderFailure):
+class GridParseFailure(Error):
     """Parent class for parsing exceptions"""
     pass
 
 
-class GridFormatFailure(GridderFailure):
+class GridFormatFailure(Error):
     """Parent class for formatting exceptions"""
     pass
 
@@ -174,8 +174,23 @@ def sheet_list(easting, northing, series='ABCHJ'):
 
     return sorted(sheets)
 
-# is $pt left of $a--$b?
-def _is_left(x, y, a, b):
+# is $pt left of left, right, or on $a--$b?
+def _is_left_right_or_on(x, y, a, b):
+    '''Is the point (x, y) left of, right of, or on the line from a to b?
+    Left: > 0
+    On: == 0
+    Right: < 0
+
+    >>> _is_left_right_or_on(0, 0, (42,-4), (42, +4)) > 0
+    True
+
+    >>> _is_left_right_or_on(0, 0, (0, 42), (0, -42)) == 0
+    True
+
+    >>> _is_left_right_or_on(0, 0, (-42,-4), (-42, +4)) < 0
+    True
+
+    '''
     return (b[0] - a[0]) * (y - a[1]) - (x - a[0]) * (b[1] - a[1])
 
 # adapted from http://geomalgorithms.com/a03-_inclusion.html
@@ -183,10 +198,10 @@ def _winding_number(x, y, poly):
     w = 0
     for i in range(len(poly)-1):
         if poly[i][1] <= y:
-            if poly[i+1][1] > y and _is_left(x, y, poly[i], poly[i+1]) > 0:
+            if poly[i+1][1] > y and _is_left_right_or_on(x, y, poly[i], poly[i+1]) > 0:
                 w += 1
         else:
-            if poly[i+1][1] <= y and _is_left(x, y, poly[i], poly[i+1]) < 0:
+            if poly[i+1][1] <= y and _is_left_right_or_on(x, y, poly[i], poly[i+1]) < 0:
                 w -= 1
     return w
 
@@ -647,4 +662,4 @@ def _get_eastings_northings(s):
 
 if __name__ == "__main__":
     import doctest
-    doctest.testmod()
+    doctest.testmod(verbose=False)

@@ -17,8 +17,13 @@ OSTN02.  This dataset is freely available for public use, but remains © Crown
 copyright, Ordnance Survey and the Ministry of Defence (MOD) 2002. All rights
 reserved.
 
+The modules are designed to work with Python 2.7 or better and with Python 3.5 or better.
+With Python 2, they are slightly faster than with Python 3, but the functions are,
+and the results should be, identical.
+
 # install
 
+    python setup.py install
     python3 setup.py install
 
 # usage
@@ -33,14 +38,14 @@ reserved.
 
 # contents
 
+    README.md
     setup.py
     osgb/convert.py
     osgb/gridder.py
-    osgb/mapping.data
     osgb/mapping.py
     osgb/ostn02.data
     scripts/bngl
-    scripts/make_mapping_data
+    scripts/make_map_locker
     test/bench_mark.py
     test/osgb_os_data.py 
 
