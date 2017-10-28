@@ -1,9 +1,10 @@
+# coding: utf-8
+# pylint: disable=C0103, C0301
 """Conversion between latitude/longitude and OSGB grid references.
 
-Toby Thurston -- 23 Oct 2017 
+Toby Thurston -- 28 Oct 2017 
 
 """
-# pylint: disable=C0103, C0301
 from __future__ import print_function, unicode_literals, division
 
 import math
@@ -32,7 +33,7 @@ class Error(Exception):
     """Parent class for exceptions in this module"""
     pass
 
-class UndefinedModel(Error):
+class UndefinedModelError(Error):
     """Raised when the model given is undefined
 
     Attributes:
@@ -41,7 +42,6 @@ class UndefinedModel(Error):
     """
     def __init__(self, spam):
         self.spam = spam
-        super(UndefinedModel, self).__init__()
 
     def __str__(self):
         return "{}".format(self.spam)
@@ -226,12 +226,12 @@ def ll_to_grid(lat, lon, model='WGS84', rounding=-1):
         >>> ll_to_grid(49, -2, model='OSGB36')
         (400000.0, -100000.0)
 
-    If the model is not 'OSGB36' or 'WGS84' you will get an UndefinedModel exception:
+    If the model is not 'OSGB36' or 'WGS84' you will get an UndefinedModelError exception:
 
-        >>> ll_to_grid(49, -2, model='EDM50')
+        >>> ll_to_grid(49, -2, model='EDM50') # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
-        ...
-        UndefinedModel: EDM50
+            ...
+        UndefinedModelError: EDM50
 
     Incidentally, the grid coordinates returned by this call are the
     coordinates of the `true point of origin' of the British grid.  You should
@@ -259,7 +259,7 @@ def ll_to_grid(lat, lon, model='WGS84', rounding=-1):
         (lat, lon) = (lon, lat)
 
     if model not in ELLIPSOID_MODELS:
-        raise UndefinedModel(model)
+        raise UndefinedModelError(model)
 
     easting, northing = _project_onto_grid(lat, lon, model)
 
@@ -489,8 +489,14 @@ def _llh_to_cartesian(lat, lon, H, model):
     >>> _cartesian_to_llh(x, y, z, 'WGS84')
     (52.0, 1.0, 29.999999999068677)
 
+    Numbers from the worked example in the OSGB guide
+    e2 == 6.6705397616E-03 
+    nu == 6.3910506260E+06
+    >>> tuple(round(x,4) for x in _llh_to_cartesian(52 + 39/60 + 27.2531/3600, 1 + 43/60 + 4.5177/3600, 24.700, 'OSGB36'))
+    (3874938.8497, 116218.6238, 5047168.2073)
+
     '''
-    a, _, _, e2 = ELLIPSOID_MODELS[model]
+    a, b, _, e2 = ELLIPSOID_MODELS[model]
 
     phi = lat / 57.29577951308232087679815481410517
     sp = math.sin(phi)
@@ -579,6 +585,3 @@ def _shift_ll_from_wgs84_to_osgb36(lat, lon):
     (latx, lonx, _) = _cartesian_to_llh(xb, yb, zb, 'OSGB36')
     return (latx, lonx)
 
-if __name__ == "__main__":
-    import doctest
-    doctest.testmod(verbose=False)

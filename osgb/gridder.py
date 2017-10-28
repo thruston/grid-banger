@@ -2,7 +2,7 @@
 # pylint: disable=C0103,C0303
 """Parse and format OSGB grid reference strings
 
-Toby Thurston -- 08 Oct 2017 
+Toby Thurston -- 28 Oct 2017 
 
 """
 from __future__ import unicode_literals, print_function, division
@@ -28,17 +28,17 @@ class Error(Exception):
     pass
 
 
-class GridParseFailure(Error):
+class GridParseError(Error):
     """Parent class for parsing exceptions"""
     pass
 
 
-class GridFormatFailure(Error):
+class GridFormatError(Error):
     """Parent class for formatting exceptions"""
     pass
 
 
-class GridGarbage(GridParseFailure):
+class GarbageError(GridParseError):
     """Raised when no grid ref can be deduced from the string given.
 
     Attributes:
@@ -47,13 +47,12 @@ class GridGarbage(GridParseFailure):
     """
     def __init__(self, spam):
         self.spam = spam
-        super(GridGarbage, self).__init__()
 
     def __str__(self):
         return "I can't read a grid reference from this -> {}".format(self.spam)
 
 
-class GridSheetMismatch(GridParseFailure):
+class SheetMismatchError(GridParseError):
     """Raised when grid ref given is not on sheet given
 
     Attributes:
@@ -66,14 +65,13 @@ class GridSheetMismatch(GridParseFailure):
         self.sheet = sheet
         self.easting = easting
         self.northing = northing
-        super(GridSheetMismatch, self).__init__()
 
     def __str__(self):
         return "Grid point ({}, {})".format(self.easting, self.northing) \
                + " is not on sheet {}".format(self.sheet)
 
 
-class UndefinedSheet(GridParseFailure):
+class UndefinedSheetError(GridParseError):
     """Raised when sheet given is not one we know
 
     Attributes:
@@ -82,13 +80,12 @@ class UndefinedSheet(GridParseFailure):
     """
     def __init__(self, sheet):
         self.sheet = sheet
-        super(UndefinedSheet, self).__init__()
 
     def __str__(self):
         return "Sheet {} is not known here.".format(self.sheet)
 
 
-class FaultyForm(GridFormatFailure):
+class FaultyFormError(GridFormatError):
     """Raised when the form given to format_grid is unmatched.
 
     Attributes:
@@ -97,13 +94,12 @@ class FaultyForm(GridFormatFailure):
     """
     def __init__(self, form):
         self.form = form
-        super(FaultyForm, self).__init__()
 
     def __str__(self):
         return "This form argument was not matched --> form='{}'".format(self.form)
 
 
-class FarFarAway(GridFormatFailure):
+class FarFarAwayError(GridFormatError):
     """Raised when grid reference is nowhere near GB.
 
     Attributes:
@@ -113,7 +109,6 @@ class FarFarAway(GridFormatFailure):
     def __init__(self, easting, northing):
         self.easting = easting
         self.northing = northing
-        super(GridFormatFailure, self).__init__()
 
     def __str__(self):
         return "The spot with coordinates" \
@@ -177,19 +172,14 @@ def sheet_list(easting, northing, series='ABCHJ'):
 # is $pt left of left, right, or on $a--$b?
 def _is_left_right_or_on(x, y, a, b):
     '''Is the point (x, y) left of, right of, or on the line from a to b?
-    Left: > 0
-    On: == 0
-    Right: < 0
+    Left: > 0, On: == 0, Right: < 0
 
     >>> _is_left_right_or_on(0, 0, (42,-4), (42, +4)) > 0
     True
-
     >>> _is_left_right_or_on(0, 0, (0, 42), (0, -42)) == 0
     True
-
     >>> _is_left_right_or_on(0, 0, (-42,-4), (-42, +4)) < 0
     True
-
     '''
     return (b[0] - a[0]) * (y - a[1]) - (x - a[0]) * (b[1] - a[1])
 
@@ -279,10 +269,10 @@ def format_grid(easting, northing=None, form='SS EEE NNN'):
 
     but in general the form argument must match "SS E* N*" (spaces optional)
 
-    >>> format_grid(432800, 250000, form='TT')
+    >>> format_grid(432800, 250000, form='TT') # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
     ...
-    FaultyForm: This form argument was not matched --> form='TT'
+    FaultyFormError: This form argument was not matched --> form='TT'
 
     >>> print(format_grid(314159, 271828, form='SS'))
     SO
@@ -298,10 +288,10 @@ def format_grid(easting, northing=None, form='SS EEE NNN'):
 
     But must not be too far away from the grid...
 
-    >>> format_grid(-1e12, -5)
+    >>> format_grid(-1e12, -5) # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
     ...
-    FarFarAway: The spot with coordinates (-1e+12, -5) is too far from the OSGB grid
+    FarFarAwayError: The spot with coordinates (-1e+12, -5) is too far from the OSGB grid
 
 
     """
@@ -319,7 +309,7 @@ def format_grid(easting, northing=None, form='SS EEE NNN'):
         sq = GRID_SQ_LETTERS[major_index] + GRID_SQ_LETTERS[minor_index]
 
     else:
-        raise FarFarAway(easting, northing)
+        raise FarFarAwayError(easting, northing)
 
     e = int(easting  % MINOR_GRID_SQ_SIZE)
     n = int(northing % MINOR_GRID_SQ_SIZE)
@@ -335,7 +325,7 @@ def format_grid(easting, northing=None, form='SS EEE NNN'):
 
     m = re.match(r'S{1,2}(\s*)(E{1,5})(\s*)(N{1,5})', ff)
     if m is None:
-        raise FaultyForm(form)
+        raise FaultyFormError(form)
 
     (space_a, e_spec, space_b, n_spec) = m.group(1, 2, 3, 4)
     e = int(e/10**(5-len(e_spec)))
@@ -501,26 +491,26 @@ def parse_grid(*grid_elements, **kwargs):
         (309000, 205000)
 
    A map sheet with a grid ref that does not actually coincide will raise a 
-   GridSheetMismatch error
+   SheetMismatchError error
 
-        >>> parse_grid('176/924011')
+        >>> parse_grid('176/924011') # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
         ...
-        GridSheetMismatch: Grid point (592400, 201100) is not on sheet A:176
+        SheetMismatchError: Grid point (592400, 201100) is not on sheet A:176
    
-   A map sheet that does not exist will raise an UndefinedSheet error
+   A map sheet that does not exist will raise an UndefinedSheetError error
 
-        >>> parse_grid('B:999/924011')
+        >>> parse_grid('B:999/924011') # doctest: +IGNORE_EXCEPTION_DETAIL 
         Traceback (most recent call last):
         ...
-        UndefinedSheet: Sheet B:999 is not known here.
+        UndefinedSheetError: Sheet B:999 is not known here.
 
 
-    If there's no matching input then a GridGarbage error is raised.
-        >>> parse_grid('Somewhere in London')
+    If there's no matching input then a GarbageError error is raised.
+        >>> parse_grid('Somewhere in London') # doctest: +IGNORE_EXCEPTION_DETAIL 
         Traceback (most recent call last):
         ...
-        GridGarbage: I can't read a grid reference from this -> Somewhere in London
+        GarbageError: I can't read a grid reference from this -> Somewhere in London
 
     """
 
@@ -556,7 +546,7 @@ def parse_grid(*grid_elements, **kwargs):
     # so lets try to decompose the string version of the input
     ok = re.match(r'^([A-Z]:)?([0-9NEWSOL/]+?)(\.[a-z]+)?(?:[ -/.]([ 0-9]+))?$', grid_string)
     if not ok:
-        raise GridGarbage(grid_string)
+        raise GarbageError(grid_string)
 
     (prefix, sheet_number, suffix, numbers) = ok.groups()
 
@@ -569,7 +559,7 @@ def parse_grid(*grid_elements, **kwargs):
         sheet = sheet + suffix
 
     if sheet not in map_locker:
-        raise UndefinedSheet(sheet)
+        raise UndefinedSheetError(sheet)
 
     easting = map_locker[sheet]['bbox'][0][0]   # start with SW corner
     northing = map_locker[sheet]['bbox'][0][1]
@@ -579,7 +569,7 @@ def parse_grid(*grid_elements, **kwargs):
         easting = easting + (e - easting) % MINOR_GRID_SQ_SIZE
         northing = northing + (n - northing) % MINOR_GRID_SQ_SIZE
         if _winding_number(easting, northing, map_locker[sheet]['polygon']) == 0:
-            raise GridSheetMismatch(sheet, easting, northing)
+            raise SheetMismatchError(sheet, easting, northing)
 
     return (easting, northing)
 
@@ -658,8 +648,3 @@ def _get_eastings_northings(s):
 
     figs = min(5, max(len(e), len(n)))
     return (int(e)*10**(5-figs), int(n)*10**(5-figs))
-
-
-if __name__ == "__main__":
-    import doctest
-    doctest.testmod(verbose=False)
