@@ -415,9 +415,16 @@ def parse_grid(*grid_elements, **kwargs):
         >>> parse_grid('TA', '1234567890')
         (512345, 467890)
 
-        Or even just two numbers (primarily included for testing purposes)
+        Or even just two numbers (primarily included for testing purposes).
+        Note that this allows floats, and that the results will come back as floats
         >>> parse_grid(314159, 271828)
-        (314159, 271828)
+        (314159.0, 271828.0)
+
+        >>> parse_grid('314159 271828')
+        (314159.0, 271828.0)
+        
+        >>> parse_grid(231413.123, 802143.456)
+        (231413.123, 802143.456)
 
         If you are processing grid references from some external data source
         beware that if you use a list with bare numbers you may lose any leading
@@ -537,11 +544,13 @@ def parse_grid(*grid_elements, **kwargs):
             return (en_tuple[0]+offsets[0], en_tuple[1]+offsets[1])
     
     # just a pair of numbers
-    if len(grid_elements) == 2:
-        if _is_number(grid_elements[0]):
-            if _is_number(grid_elements[1]):
-                return tuple(grid_elements)
-
+    try:
+        grid_elements = tuple(float(x) for x in grid_string.split())
+        if len(grid_elements) == 2:
+            return grid_elements
+    except ValueError:
+        pass
+    
     # probably now a sheet name rather than a SQ number
     # so lets try to decompose the string version of the input
     ok = re.match(r'^([A-Z]:)?([0-9NEWSOL/]+?)(\.[a-z]+)?(?:[ -/.]([ 0-9]+))?$', grid_string)
@@ -572,27 +581,6 @@ def parse_grid(*grid_elements, **kwargs):
             raise SheetMismatchError(sheet, easting, northing)
 
     return (easting, northing)
-
-def _is_number(s):
-    """Is this a number I see before me?
-
-    >>> _is_number(3.141529)
-    True
-
-    >>> _is_number("")
-    False
-
-    >>> _is_number("TA")
-    False
-
-    """
-
-    try:
-        float(s)
-        return True
-    except ValueError:
-        return False
-
 
 def _get_grid_square_offsets(sq):
     """Get (e, n) for ll corner of a grid square

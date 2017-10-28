@@ -4,7 +4,7 @@ osgb
 Python routines for working with grid references as defined by the Ordnance
 Survey of Great Britain (OSGB).
 
-Toby Thurston -- 08 Oct 2017 
+Toby Thurston -- 28 Oct 2017 
 
 The functions in this module convert from OSGB grid references to and from GPS
 Lat/Lon with using OSGB formulae and the OSTN02 data set.  Conversions are
