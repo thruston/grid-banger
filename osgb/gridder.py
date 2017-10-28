@@ -1,9 +1,11 @@
+# coding: utf-8
+# pylint: disable=C0103,C0303
 """Parse and format OSGB grid reference strings
 
-Toby Thurston -- 09 Jun 2017
+Toby Thurston -- 28 Oct 2017 
 
 """
-# pylint: disable=C0103,C0303
+from __future__ import unicode_literals, print_function, division
 
 import math
 import re
@@ -21,22 +23,22 @@ MAJOR_GRID_SQ_NORTHING_OFFSET = 1 * MAJOR_GRID_SQ_SIZE
 MAX_GRID_SIZE = MINOR_GRID_SQ_SIZE * len(GRID_SQ_LETTERS)
 
 
-class GridderFailure(Exception):
+class Error(Exception):
     """Parent class for Gridder exceptions"""
     pass
 
 
-class GridParseFailure(GridderFailure):
+class GridParseError(Error):
     """Parent class for parsing exceptions"""
     pass
 
 
-class GridFormatFailure(GridderFailure):
+class GridFormatError(Error):
     """Parent class for formatting exceptions"""
     pass
 
 
-class GridGarbage(GridParseFailure):
+class GarbageError(GridParseError):
     """Raised when no grid ref can be deduced from the string given.
 
     Attributes:
@@ -45,13 +47,12 @@ class GridGarbage(GridParseFailure):
     """
     def __init__(self, spam):
         self.spam = spam
-        super().__init__()
 
     def __str__(self):
         return "I can't read a grid reference from this -> {}".format(self.spam)
 
 
-class GridSheetMismatch(GridParseFailure):
+class SheetMismatchError(GridParseError):
     """Raised when grid ref given is not on sheet given
 
     Attributes:
@@ -64,14 +65,13 @@ class GridSheetMismatch(GridParseFailure):
         self.sheet = sheet
         self.easting = easting
         self.northing = northing
-        super().__init__()
 
     def __str__(self):
         return "Grid point ({}, {})".format(self.easting, self.northing) \
                + " is not on sheet {}".format(self.sheet)
 
 
-class UndefinedSheet(GridParseFailure):
+class UndefinedSheetError(GridParseError):
     """Raised when sheet given is not one we know
 
     Attributes:
@@ -80,13 +80,12 @@ class UndefinedSheet(GridParseFailure):
     """
     def __init__(self, sheet):
         self.sheet = sheet
-        super().__init__()
 
     def __str__(self):
         return "Sheet {} is not known here.".format(self.sheet)
 
 
-class FaultyForm(GridFormatFailure):
+class FaultyFormError(GridFormatError):
     """Raised when the form given to format_grid is unmatched.
 
     Attributes:
@@ -95,13 +94,12 @@ class FaultyForm(GridFormatFailure):
     """
     def __init__(self, form):
         self.form = form
-        super().__init__()
 
     def __str__(self):
         return "This form argument was not matched --> form='{}'".format(self.form)
 
 
-class FarFarAway(GridFormatFailure):
+class FarFarAwayError(GridFormatError):
     """Raised when grid reference is nowhere near GB.
 
     Attributes:
@@ -111,12 +109,11 @@ class FarFarAway(GridFormatFailure):
     def __init__(self, easting, northing):
         self.easting = easting
         self.northing = northing
-        super().__init__()
 
     def __str__(self):
         return "The spot with coordinates" \
                 + " " \
-                + "({}, {})".format(self.easting, self.northing) \
+                + "({:g}, {:g})".format(self.easting, self.northing) \
                 + " " \
                 + "is too far from the OSGB grid"
 
@@ -127,8 +124,8 @@ def sheet_list(easting, northing, series='ABCHJ'):
     The optional argument "series" controls which maps are included in the 
     list.  The default is to include maps from all defined series.
 
-    >>> sheet_list(438710.908, 114792.248, series='AB')
-    ['A:196', 'B:OL22E']
+    >>> print(' '.join(sheet_list(438710.908, 114792.248, series='AB')))
+    A:196 B:OL22E
 
     Currently the series included are:
 
@@ -143,15 +140,15 @@ def sheet_list(easting, northing, series='ABCHJ'):
     themselves; instead the maps have titles.  You can use the numbers
     returned as an index to the maps data to find the appropriate title.
 
-    >>> sheet_list(314159, 271828)
-    ['A:136', 'A:148', 'B:200E', 'B:214E', 'C:128']
+    >>> print(' '.join(sheet_list(314159, 271828)))
+    A:136 A:148 B:200E B:214E C:128
 
     You can restrict the list to certain series.
     So if you only want Explorer maps use: series='B', and if you
     want only Explorers and Landrangers use: series='AB', and so on. 
 
-    >>> sheet_list(651537, 313135, series='A')
-    ['A:134']
+    >>> print(''.join(sheet_list(651537, 313135, series='A')))
+    A:134
 
     If the (easting, northing) pair is not covered by any map sheet you'll get 
     an empty list
@@ -172,8 +169,18 @@ def sheet_list(easting, northing, series='ABCHJ'):
 
     return sorted(sheets)
 
-# is $pt left of $a--$b?
-def _is_left(x, y, a, b):
+# is $pt left of left, right, or on $a--$b?
+def _is_left_right_or_on(x, y, a, b):
+    '''Is the point (x, y) left of, right of, or on the line from a to b?
+    Left: > 0, On: == 0, Right: < 0
+
+    >>> _is_left_right_or_on(0, 0, (42,-4), (42, +4)) > 0
+    True
+    >>> _is_left_right_or_on(0, 0, (0, 42), (0, -42)) == 0
+    True
+    >>> _is_left_right_or_on(0, 0, (-42,-4), (-42, +4)) < 0
+    True
+    '''
     return (b[0] - a[0]) * (y - a[1]) - (x - a[0]) * (b[1] - a[1])
 
 # adapted from http://geomalgorithms.com/a03-_inclusion.html
@@ -181,10 +188,10 @@ def _winding_number(x, y, poly):
     w = 0
     for i in range(len(poly)-1):
         if poly[i][1] <= y:
-            if poly[i+1][1] > y and _is_left(x, y, poly[i], poly[i+1]) > 0:
+            if poly[i+1][1] > y and _is_left_right_or_on(x, y, poly[i], poly[i+1]) > 0:
                 w += 1
         else:
-            if poly[i+1][1] <= y and _is_left(x, y, poly[i], poly[i+1]) < 0:
+            if poly[i+1][1] <= y and _is_left_right_or_on(x, y, poly[i], poly[i+1]) < 0:
                 w -= 1
     return w
 
@@ -196,22 +203,24 @@ def format_grid(easting, northing=None, form='SS EEE NNN'):
     grid reference with two letters and two sets of three numbers, like this
     `SU 387 147'.  
 
-    >>> format_grid(438710.908, 114792.248)
-    'SU 387 147'
+    >>> print(format_grid(438710.908, 114792.248))
+    SU 387 147
 
     If you want the individual components, apply split() to it.
 
-    >>> format_grid(438710.908, 114792.248).split()
-    ['SU', '387', '147']
+    >>> print('-'.join(format_grid(438710.908, 114792.248).split()))
+    SU-387-147
+
+    and note that the results are strings not integers.
 
     The format grid routine takes three optional keyword arguments to control the
     form of grid reference returned.  This should be a hash reference with
     one or more of the keys shown below (with the default values).
 
-    >>> format_grid(438710.908, 114792.248, form='SS EEE NNN')
-    'SU 387 147'
-    >>> format_grid(438710.908, 114792.248, form='SS EEEEE NNNNN')
-    'SU 38710 14792'
+    >>> print(format_grid(438710.908, 114792.248, form='SS EEE NNN'))
+    SU 387 147
+    >>> print(format_grid(438710.908, 114792.248, form='SS EEEEE NNNNN'))
+    SU 38710 14792
 
     Note that rather than being rounded, the easting and northing are truncated
     (as the OS system demands), so the grid reference refers to the lower left
@@ -220,69 +229,69 @@ def format_grid(easting, northing=None, form='SS EEE NNN'):
 
     An optional keyword argument "form" controls the format of the grid reference.  
 
-    >>> format_grid(438710.908, 114792.248, form='SS')
-    'SU'
-    >>> format_grid(438710.908, 114792.248, form='SSEN')
-    'SU31'
-    >>> format_grid(438710.908, 114792.248, form='SSEENN')
-    'SU3814'
-    >>> format_grid(438710.908, 114792.248, form='SSEEENNN')
-    'SU387147'
-    >>> format_grid(438710.908, 114792.248, form='SSEEEENNNN')
-    'SU38711479'
-    >>> format_grid(438710.908, 114792.248, form='SSEEEEENNNNN')
-    'SU3871014792'
-    >>> format_grid(438710.908, 114792.248, form='SS EN')
-    'SU 31'
-    >>> format_grid(438710.908, 114792.248, form='SS EE NN')
-    'SU 38 14'
-    >>> format_grid(438710.908, 114792.248, form='SS EEE NNN')
-    'SU 387 147'
-    >>> format_grid(438710.908, 114792.248, form='SS EEEE NNNN')
-    'SU 3871 1479'
-    >>> format_grid(400010.908, 114792.248, form='SS EEEEE NNNNN')
-    'SU 00010 14792'
+    >>> print(format_grid(438710.908, 114792.248, form='SS'))
+    SU
+    >>> print(format_grid(438710.908, 114792.248, form='SSEN'))
+    SU31
+    >>> print(format_grid(438710.908, 114792.248, form='SSEENN'))
+    SU3814
+    >>> print(format_grid(438710.908, 114792.248, form='SSEEENNN'))
+    SU387147
+    >>> print(format_grid(438710.908, 114792.248, form='SSEEEENNNN'))
+    SU38711479
+    >>> print(format_grid(438710.908, 114792.248, form='SSEEEEENNNNN'))
+    SU3871014792
+    >>> print(format_grid(438710.908, 114792.248, form='SS EN'))
+    SU 31
+    >>> print(format_grid(438710.908, 114792.248, form='SS EE NN'))
+    SU 38 14
+    >>> print(format_grid(438710.908, 114792.248, form='SS EEE NNN'))
+    SU 387 147
+    >>> print(format_grid(438710.908, 114792.248, form='SS EEEE NNNN'))
+    SU 3871 1479
+    >>> print(format_grid(400010.908, 114792.248, form='SS EEEEE NNNNN'))
+    SU 00010 14792
 
     You can't leave out the SS, you can't have N before E, and there must be
     the same number of Es and Ns.
 
     There are two other special formats:
 
-    >>> format_grid(438710.908, 114792.248, form='TRAD')
-    'SU 387 147'
-    >>> format_grid(438710.908, 114792.248, form='GPS')
-    'SU 38710 14792'
+    >>> print(format_grid(438710.908, 114792.248, form='TRAD'))
+    SU 387 147
+    >>> print(format_grid(438710.908, 114792.248, form='GPS'))
+    SU 38710 14792
 
     The format can be given as upper case or lower case or a mixture.  
     
-    >>> format_grid(438710.908, 114792.248, form='trad')
-    'SU 387 147'
+    >>> print(format_grid(438710.908, 114792.248, form='trad'))
+    SU 387 147
 
     but in general the form argument must match "SS E* N*" (spaces optional)
 
-    >>> format_grid(432800, 250000, form='TT')
+    >>> format_grid(432800, 250000, form='TT') # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
     ...
-    FaultyForm: This form argument was not matched --> form='TT'
+    FaultyFormError: This form argument was not matched --> form='TT'
 
-    >>> format_grid(314159, 271828, form='SS')
-    'SO'
-    >>> format_grid(0, 0, form='SS')
-    'SV'
-    >>> format_grid(432800, 1250000, form='SS')
-    'HP'
+    >>> print(format_grid(314159, 271828, form='SS'))
+    SO
+    >>> print(format_grid(0, 0, form='SS'))
+    SV
+    >>> print(format_grid(432800, 1250000, form='SS'))
+    HP
 
     The arguments can be negative...
 
-    >>> format_grid(-5, -5, form='SS')
-    'WE'
+    >>> print(format_grid(-5, -5, form='SS'))
+    WE
 
     But must not be too far away from the grid...
 
-    >>> format_grid(-1e12, -5)
+    >>> format_grid(-1e12, -5) # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
     ...
-    FarFarAway: The spot with coordinates (-1000000000000.0, -5) is too far from the OSGB grid
+    FarFarAwayError: The spot with coordinates (-1e+12, -5) is too far from the OSGB grid
 
 
     """
@@ -300,7 +309,7 @@ def format_grid(easting, northing=None, form='SS EEE NNN'):
         sq = GRID_SQ_LETTERS[major_index] + GRID_SQ_LETTERS[minor_index]
 
     else:
-        raise FarFarAway(easting, northing)
+        raise FarFarAwayError(easting, northing)
 
     e = int(easting  % MINOR_GRID_SQ_SIZE)
     n = int(northing % MINOR_GRID_SQ_SIZE)
@@ -316,7 +325,7 @@ def format_grid(easting, northing=None, form='SS EEE NNN'):
 
     m = re.match(r'S{1,2}(\s*)(E{1,5})(\s*)(N{1,5})', ff)
     if m is None:
-        raise FaultyForm(form)
+        raise FaultyFormError(form)
 
     (space_a, e_spec, space_b, n_spec) = m.group(1, 2, 3, 4)
     e = int(e/10**(5-len(e_spec)))
@@ -326,7 +335,7 @@ def format_grid(easting, northing=None, form='SS EEE NNN'):
            + space_a + '{0:0{1}d}'.format(e, len(e_spec)) \
            + space_b + '{0:0{1}d}'.format(n, len(n_spec))
 
-def parse_grid(*grid_elements, figs=3):
+def parse_grid(*grid_elements, **kwargs):
     """Parse a grid reference from a range of inputs.
 
     The parse_grid routine extracts a (easting, northing) pair from a
@@ -335,7 +344,7 @@ def parse_grid(*grid_elements, figs=3):
 
     The arguments should be in one of the following three forms
 
-    •   A single string representing a grid reference
+    -   A single string representing a grid reference
 
         >>> parse_grid("TA 123 678")
         (512300, 467800)
@@ -391,7 +400,7 @@ def parse_grid(*grid_elements, figs=3):
         (-296419, 916564)
 
 
-     •  A two or three element list representing a grid reference
+     -  A two or three element list representing a grid reference
 
         >>> parse_grid('TA', 0, 0)
         (500000, 400000)
@@ -406,9 +415,16 @@ def parse_grid(*grid_elements, figs=3):
         >>> parse_grid('TA', '1234567890')
         (512345, 467890)
 
-        Or even just two numbers (primarily included for testing purposes)
+        Or even just two numbers (primarily included for testing purposes).
+        Note that this allows floats, and that the results will come back as floats
         >>> parse_grid(314159, 271828)
-        (314159, 271828)
+        (314159.0, 271828.0)
+
+        >>> parse_grid('314159 271828')
+        (314159.0, 271828.0)
+        
+        >>> parse_grid(231413.123, 802143.456)
+        (231413.123, 802143.456)
 
         If you are processing grid references from some external data source
         beware that if you use a list with bare numbers you may lose any leading
@@ -427,7 +443,7 @@ def parse_grid(*grid_elements, figs=3):
         hectometres as in a traditional grid reference. The maximum is 5
         and the minimum is the length of the longer of easting or northing.
 
-    •   A string or a list representing a map and a local grid reference, 
+    -   A string or a list representing a map and a local grid reference, 
         corresponding to the following examples:
 
         Caesar's Camp
@@ -482,28 +498,33 @@ def parse_grid(*grid_elements, figs=3):
         (309000, 205000)
 
    A map sheet with a grid ref that does not actually coincide will raise a 
-   GridSheetMismatch error
+   SheetMismatchError error
 
-        >>> parse_grid('176/924011')
+        >>> parse_grid('176/924011') # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
         ...
-        GridSheetMismatch: Grid point (592400, 201100) is not on sheet A:176
+        SheetMismatchError: Grid point (592400, 201100) is not on sheet A:176
    
-   A map sheet that does not exist will raise an UndefinedSheet error
+   A map sheet that does not exist will raise an UndefinedSheetError error
 
-        >>> parse_grid('B:999/924011')
+        >>> parse_grid('B:999/924011') # doctest: +IGNORE_EXCEPTION_DETAIL 
         Traceback (most recent call last):
         ...
-        UndefinedSheet: Sheet B:999 is not known here.
+        UndefinedSheetError: Sheet B:999 is not known here.
 
 
-    If there's no matching input then a GridGarbage error is raised.
-        >>> parse_grid('Somewhere in London')
+    If there's no matching input then a GarbageError error is raised.
+        >>> parse_grid('Somewhere in London') # doctest: +IGNORE_EXCEPTION_DETAIL 
         Traceback (most recent call last):
         ...
-        GridGarbage: I can't read a grid reference from this -> Somewhere in London
+        GarbageError: I can't read a grid reference from this -> Somewhere in London
 
     """
+
+    try:
+        figs = int(kwargs['figs'])
+    except (KeyError, ValueError):
+        figs = 3
 
     if len(grid_elements) == 3:
         sq, ee, nn = grid_elements
@@ -523,17 +544,18 @@ def parse_grid(*grid_elements, figs=3):
             return (en_tuple[0]+offsets[0], en_tuple[1]+offsets[1])
     
     # just a pair of numbers
-    if len(grid_elements) == 2:
-        if _is_number(grid_elements[0]):
-            if _is_number(grid_elements[1]):
-                return tuple(grid_elements)
-
+    try:
+        grid_elements = tuple(float(x) for x in grid_string.split())
+        if len(grid_elements) == 2:
+            return grid_elements
+    except ValueError:
+        pass
+    
     # probably now a sheet name rather than a SQ number
     # so lets try to decompose the string version of the input
-    sheet_ref = re.compile(r'^([A-Z]:)?([0-9NEWSOL/]+?)(\.[a-z]+)?(?:[ -/.]([ 0-9]+))?$')
-    ok = sheet_ref.match(grid_string) 
+    ok = re.match(r'^([A-Z]:)?([0-9NEWSOL/]+?)(\.[a-z]+)?(?:[ -/.]([ 0-9]+))?$', grid_string)
     if not ok:
-        raise GridGarbage(grid_string)
+        raise GarbageError(grid_string)
 
     (prefix, sheet_number, suffix, numbers) = ok.groups()
 
@@ -546,9 +568,9 @@ def parse_grid(*grid_elements, figs=3):
         sheet = sheet + suffix
 
     if sheet not in map_locker:
-        raise UndefinedSheet(sheet)
+        raise UndefinedSheetError(sheet)
 
-    easting = map_locker[sheet]['bbox'][0][0]   # start with SW corner
+    easting = map_locker[sheet]['bbox'][0][0]   # start with SW corner
     northing = map_locker[sheet]['bbox'][0][1]
 
     if numbers is not None:
@@ -556,30 +578,9 @@ def parse_grid(*grid_elements, figs=3):
         easting = easting + (e - easting) % MINOR_GRID_SQ_SIZE
         northing = northing + (n - northing) % MINOR_GRID_SQ_SIZE
         if _winding_number(easting, northing, map_locker[sheet]['polygon']) == 0:
-            raise GridSheetMismatch(sheet, easting, northing)
+            raise SheetMismatchError(sheet, easting, northing)
 
     return (easting, northing)
-
-def _is_number(s):
-    """Is this a number I see before me?
-
-    >>> _is_number(3.141529)
-    True
-
-    >>> _is_number("")
-    False
-
-    >>> _is_number("TA")
-    False
-
-    """
-
-    try:
-        float(s)
-        return True
-    except ValueError:
-        return False
-
 
 def _get_grid_square_offsets(sq):
     """Get (e, n) for ll corner of a grid square
@@ -635,8 +636,3 @@ def _get_eastings_northings(s):
 
     figs = min(5, max(len(e), len(n)))
     return (int(e)*10**(5-figs), int(n)*10**(5-figs))
-
-
-if __name__ == "__main__":
-    import doctest
-    doctest.testmod()

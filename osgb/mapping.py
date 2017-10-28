@@ -1,7 +1,9 @@
+# coding: utf-8
 """Data for OSGB and other walkers maps in England, Wales, Scotland, and Isle of Man.
 
 Toby Thurston -- 19 Mar 2016 
 """
+from __future__ import unicode_literals
 
 map_locker = {
 "A:1" : { 'bbox' : [[428200, 1180000], [469000, 1220600]], 'area' : '1601.7025', 'series' : 'A', 'number' : '1', 'parent' : 'A:1', 'title' : 'Shetland – Yell, Unst and Fetlar', 'polygon' : [[429000,1180000],[469000,1180000],[469000,1220000],[462300,1220000],[462000,1220150],[461500,1220550],[461300,1220600],[461000,1220550],[460400,1220300],[460250,1220000],[429000,1220000],[429000,1187400],[428200,1187000],[428200,1186450],[429000,1185600],[429000,1180000]] },

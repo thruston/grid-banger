@@ -6,14 +6,14 @@ Toby Thurston -- 15 Mar 2016
 """
 # allow free variable names and the occasional trailing whitespace character
 # pylint: disable=C0103, C0303
-
+from __future__ import print_function
 import argparse
 import subprocess
 
 import osgb
 
-def get_likely_float(possible_number):
-    "Is this supposed to be a lat or lon coordinates?"
+def get_likely_lon_lat(possible_number):
+    "Is this supposed to be a lat or lon coordinate?"
     try:
         actual_number = float(possible_number)
     except ValueError:
@@ -24,7 +24,6 @@ def get_likely_float(possible_number):
 
     return None
 
-alphabet = ' 1234567890-.+/:ABCDEFGHJKLMNOPQRSTUVWXYZabcdef' # there is no I in this
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -34,19 +33,21 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     agenda = ' '.join(args.grid_or_ll_strings)
-    agenda = ''.join(x for x in agenda if x in alphabet) # and remove unwanted characters 
+    alphabet = ' 1234567890-.+/:ABCDEFGHJKLMNOPQRSTUVWXYZabcdef' # there is no I in this
+    agenda = ''.join(x for x in agenda if x in alphabet) # and remove unwanted characters 
 
-    floats = list(get_likely_float(x) for x in agenda.split())
+    latlon = list(get_likely_lon_lat(x) for x in agenda.split())
 
     # if the arguments consists of just two likely looking numbers...
     # You can't just say "all(floats)" because 0 is a valid Longitude
-    if len(floats) == 2 and all(x is not None for x in floats):
-        (lon, lat) = sorted(floats) # Lon is always less than Lat in OSGB
+    if len(latlon) == 2 and all(x is not None for x in latlon):
+        (lon, lat) = sorted(latlon) # Lon is always less than Lat in OSGB
         (e, n) = osgb.ll_to_grid(lat, lon)
         (olat, olon) = (lat, lon)
         (oe, on) = osgb.ll_to_grid(lat, lon, 'OSGB36')
 
     else:
+        print('>>', agenda)
         (e, n) = osgb.parse_grid(agenda)
         (lat, lon) = osgb.grid_to_ll(e, n)
         (oe, on) = (e, n)
@@ -55,8 +56,7 @@ if __name__ == "__main__":
     try:
         grid = osgb.format_grid(e, n)
         maps = osgb.sheet_list(e, n)
-    except osgb.gridder.GridderFailure as oggf:
-        #print(oggf)
+    except osgb.gridder.Error:
         grid = '??'
         maps = None
 
@@ -72,10 +72,10 @@ if __name__ == "__main__":
     try:
         grid = osgb.format_grid(oe, on)
         maps = osgb.sheet_list(oe, on)
-    except osgb.gridder.GridderFailure as oggf:
-        #print(oggf)
+    except osgb.gridder.Error:
         grid = '??'
         maps = None
+
     if maps:
         map_string = 'on sheets {}'.format(', '.join(maps))
     else:

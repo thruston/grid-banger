@@ -1,8 +1,8 @@
 #! /usr/bin/env python3
 
-"""Build mapping data file for osgb from polygon files
+"""Build mapping.py for osgb from the Perl version
 
-Toby Thurston -- 15 Mar 2016 
+Toby Thurston -- 23 Oct 2017 
 """
 import argparse
 
@@ -11,8 +11,16 @@ if __name__ == "__main__":
     parser.add_argument("source", type=str, help="file name of your local copy of Maps.pm")
     args = parser.parse_args()
     
-    with open(args.source, 'rt') as perl, open('mapping.data', 'wt') as maps:
-        print('{', file=maps)
+    with open(args.source, 'rt') as perl, open('mapping.py', 'wt') as maps:
+        print('''
+# coding: utf-8
+"""Data for OSGB and other walkers maps in England, Wales, Scotland, and Isle of Man.
+
+Toby Thurston -- 23 Oct 2017
+"""
+from __future__ import unicode_literals
+ 
+map_locker = {''', file=maps)
         for line in perl:
             if not line.startswith('$maps'):
                 continue
