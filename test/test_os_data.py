@@ -1,8 +1,9 @@
 '''Test osgb module against standard OSGB data points
 
-Toby Thurston -- 06 Oct 2017
+Toby Thurston -- 28 Oct 2017 
 '''
 
+import argparse
 import osgb
 
 # pylint: disable=C0103, C0301, C0326
@@ -69,34 +70,39 @@ def get_ll(name):
 
     return '{:.3f}N {:.3f}{}'.format(lat, abs(lon), hemi)
 
-def as_mm(degrees, grat):
+def as_mm(measure, unit):
     '''Apply some guesswork to turn degrees of Lat or Lon into approximate mm lengths.
 
-    >>> as_mm(0, 'Lon')
+    >>> as_mm(0, 'Longitude')
     0.0
 
-    >>> as_mm(51.34, 'Lat')
+    >>> as_mm(51.34, 'Latitude')
     5134000000.0
 
-    >>> as_mm(-4, 'Lon')
+    >>> as_mm(-4, 'Longitude')
     -260000000.0
 
     >>> as_mm(10, 'Northing')
-    10.0
+    10000.0
     '''
 
-    if grat == 'Lat':
-        return float(degrees)*1e8
+    factor_for = {
+            'Latitude' : 1e8,
+            'Longitude' : 6.5e7,
+            'Northing' : 1000,
+            'Easting' : 1000,
+            }
 
-    if grat == 'Lon':
-        return float(degrees)*6.5e7
+    if unit in factor_for:
+        return float(measure)*factor_for[unit]
 
-    if grat in ('Northing', 'Easting'):
-        return float(degrees)*1000
-
-    return None
+    return float(measure)
 
 if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--verbose", action="store_true")
+    args = parser.parse_args()
 
     errors = []
     for k in sorted(test_input):
@@ -114,15 +120,17 @@ if __name__ == "__main__":
         difflon = gotlon - test_input[k]['lon']
 
         if abs(difflat) > 0.00000001:
-            errors.append( (k, "Lat", difflat))
+            errors.append( (k, "Latitude", difflat))
         if abs(difflon) > 0.00000001:
-            errors.append( (k, "Lon", difflon))
+            errors.append( (k, "Longitude", difflon))
 
     tests = len(test_input)
     bad   = len(errors)
     ok    = tests-bad
-    print('{}/{} standard OS conversions are accurate to within 0.5 mm'.format(ok, tests))
+    assert(ok > 35)
 
-    for e in sorted(errors, key=lambda e:test_input[e[0]]['lon'], reverse=True):
-        k, domain, delta = e
-        print("At {} ({}) conversion to {} is within {:.2g} mm".format(k, get_ll(k), domain, as_mm(abs(delta), domain)))
+    if args.verbose:
+        print('{}/{} standard OS conversions are accurate to within 0.5 mm'.format(ok, tests))
+        for e in sorted(errors, key=lambda e:test_input[e[0]]['lon'], reverse=True):
+            k, domain, delta = e
+            print("At {} ({}) conversion to {} is within {:.2g} mm".format(k, get_ll(k), domain, as_mm(abs(delta), domain)))

@@ -1,54 +1,53 @@
 
-Toby Thurston -- 10 Oct 2014 
+Toby Thurston  2017-10-28 
 
 Test known locations convert correctly using doctest
 
 try "python -m doctest -v %"
 
->>> from grid_banger import OSGB_Grid_Point
+>>> import osgb
 
 the sw corner of OS Explorer sheet 161 (Cobham, Surrey)
 -------------------------------------------------------
 check we are within 10m (easily the limit of my ability to measure on a 1:25000 map)
 Note that here we are using OSGB36 through out, because the LL printed on OS maps is not based on WGS84
 
->>> t = OSGB_Grid_Point(lat=51.3333333333, lon= -0.416666666667, geoid='OSGB36')
+>>> osgb.ll_to_grid(lat=51.3333333333, lon= -0.416666666667, model='OSGB36')
+(510290.252, 160605.816)
 
->>> '{}'.format(t)
-'510290 160606'
-
->>> '{:trad}'.format(t)
+>>> osgb.format_grid(510290, 160606)
 'TQ 102 606'
 
 
 Hills above Loch Achall, OS Sheet 20
 ------------------------------------
 
->>> '{:gps}'.format(OSGB_Grid_Point(lat=57+55/60, lon=-305/60, geoid='OSGB36'))
-'NH 17380 96054'
+>>> osgb.format_grid(osgb.ll_to_grid(lat=57+55/60, lon=-305/60, model='OSGB36'), form='GPS')
+'NH 17379 96054'
 
 # and now a boggy path just north of Glendessary in Lochaber
 # OS Sheet 40 topright corner.  A graticule intersection at
 # 57N 5o20W is marked.  GR measured from the map.
 
->>> '{}'.format(OSGB_Grid_Point(lat=57, lon=-320/60, geoid='OSGB36'))
-'197573 794793'
+>>> osgb.ll_to_grid(lat=57, lon=-320/60, model='OSGB36')
+(197573.181, 794792.843)
 
->>> '{:trad}'.format(OSGB_Grid_Point('NM975948')) 
+>>> osgb.format_grid(osgb.parse_grid('NM975948')) 
 'NM 975 948'
->>> '{:trad}'.format(OSGB_Grid_Point('NH073060')) 
+
+>>> osgb.format_grid(osgb.parse_grid('NH073060')) 
 'NH 073 060'
->>> '{:trad}'.format(OSGB_Grid_Point('SX700682')) 
+>>> osgb.format_grid(osgb.parse_grid('SX700682')) 
 'SX 700 682'
->>> '{:trad}'.format(OSGB_Grid_Point('TQ103606')) 
+>>> osgb.format_grid(osgb.parse_grid('TQ103606')) 
 'TQ 103 606'
->>> '{:trad}'.format(OSGB_Grid_Point('HY554300')) 
+>>> osgb.format_grid(osgb.parse_grid('HY554300')) 
 'HY 554 300'
 
->>> '{:trad}'.format(OSGB_Grid_Point(sheet=40, grid='975948'))
+>>> osgb.format_grid(osgb.parse_grid('40/975948'))
 'NM 975 948'
 
-# Greenwich -- important test for long == 0
+# Greenwich -- test for long == 0
 -------------------------------------------
->>> '{:trad}'.format(OSGB_Grid_Point(lat=51.5, lon=0, geoid='OSGB36'))
+>>> osgb.format_grid(osgb.ll_to_grid(lat=51.5, lon=0, model='OSGB36'))
 'TQ 388 798'

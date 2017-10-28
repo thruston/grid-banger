@@ -1,12 +1,11 @@
 #!/usr/bin/python
 
-
 import distutils.core
 
 distutils.core.setup(
     name='osgb',
     version='0.0.1',
-    description='OSGB Conversion library based on OSTN02',
+    description='OSGB high-precision coordinate conversion library based on OSTN',
     license='MIT Licence',
     author='Toby Thurston',
     author_email='toby@cpan.org',
