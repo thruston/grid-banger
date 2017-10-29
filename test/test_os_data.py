@@ -98,6 +98,14 @@ def as_mm(measure, unit):
 
     return float(measure)
 
+def saveit(error_list, place, domain, delta):
+    if args.verbose:
+        print(place, domain, delta, as_mm(delta, domain))
+
+    error_list.append((place, domain, delta))
+
+    return
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
@@ -111,18 +119,18 @@ if __name__ == "__main__":
         diffn = gotn - test_input[k]['n']
 
         if abs(diffe) > 0.0005:
-            errors.append( (k, "Easting", diffe) )
+            saveit(errors, k, "Easting", diffe)
         if abs(diffn) > 0.0005:
-            errors.append( (k, "Northing", diffn) )
+            saveit(errors, k, "Northing", diffn)
 
         (gotlat, gotlon) = osgb.grid_to_ll(test_input[k]['e'], test_input[k]['n'])
         difflat = gotlat - test_input[k]['lat']
         difflon = gotlon - test_input[k]['lon']
 
         if abs(difflat) > 0.00000001:
-            errors.append( (k, "Latitude", difflat))
+            saveit(errors, k, "Latitude", difflat)
         if abs(difflon) > 0.00000001:
-            errors.append( (k, "Longitude", difflon))
+            saveit(errors, k, "Longitude", difflon)
 
     tests = len(test_input)
     bad   = len(errors)

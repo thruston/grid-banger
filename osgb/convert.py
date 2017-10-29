@@ -7,6 +7,7 @@ Toby Thurston -- 28 Oct 2017
 """
 from __future__ import print_function, unicode_literals, division
 
+import array
 import math
 import pkgutil
 import struct
@@ -26,8 +27,17 @@ ORIGIN_EASTING = 400000.0
 ORIGIN_NORTHING = -100000.0
 CONVERGENCE_FACTOR = 0.9996012717
 
-OSTN_DATA = pkgutil.get_data("osgb", "ostn02.data").split(b'\n')
+# OSTN data
+OSTN_DATA = pkgutil.get_data("osgb", "ostn02.data").split(b"\n")
 ostn_cache = dict()
+
+OSTN_EE_SHIFTS = array.array('H')
+OSTN_EE_SHIFTS.frombytes(pkgutil.get_data("osgb", "ostn_east_shift_82140"))
+OSTN_EE_BASE = 82140
+
+OSTN_NN_SHIFTS = array.array('H')
+OSTN_NN_SHIFTS.frombytes(pkgutil.get_data("osgb", "ostn_north_shift_-84180"))
+OSTN_NN_BASE = -84180
 
 class Error(Exception):
     """Parent class for exceptions in this module"""
@@ -109,18 +119,18 @@ def grid_to_ll(easting, northing, model='WGS84'):
         return (os_lat, os_lon)
 
     # If we want WGS84 LL, we must adjust to pseudo grid if we can
-    shifts = _find_OSTN02_shifts_at(easting, northing)
+    shifts = _find_OSTN_shifts_at(easting, northing)
     if shifts is not None:
-        in_ostn02_polygon = True
+        in_ostn_polygon = True
         x = easting - shifts[0]
         y = northing - shifts[1]
         last_shifts = shifts[:]
         for _ in range(20):
-            shifts = _find_OSTN02_shifts_at(x, y)
+            shifts = _find_OSTN_shifts_at(x, y)
 
             if shifts is None:
                 # we have been shifted off the edge
-                in_ostn02_polygon = False
+                in_ostn_polygon = False
                 break
 
             x = easting - shifts[0]
@@ -131,7 +141,7 @@ def grid_to_ll(easting, northing, model='WGS84'):
 
             last_shifts = shifts[:]
 
-        if in_ostn02_polygon:
+        if in_ostn_polygon:
             return _reverse_project_onto_ellipsoid(x, y, 'WGS84')
 
     # If we get here, we must use the Helmert approx
@@ -264,7 +274,7 @@ def ll_to_grid(lat, lon, model='WGS84', rounding=-1):
     easting, northing = _project_onto_grid(lat, lon, model)
 
     if model == 'WGS84':
-        shifts = _find_OSTN02_shifts_at(easting, northing)
+        shifts = _find_OSTN_shifts_at(easting, northing)
         if shifts is not None:
             easting += shifts[0]
             northing += shifts[1]
@@ -425,6 +435,46 @@ def _get_ostn_pair(x, y):
         shifts[i] += s/1000
 
     return shifts
+
+def _find_OSTN_shifts_at(easting, northing):
+    '''Get the OSTN shifted at a pseudo grid reference.
+
+    >>> print("{:.5f} {:.5f}".format(*_find_OSTN_shifts_at(331439.160, 431992.943)))
+    95.40442 -72.14955
+    '''
+
+    if not (0 < easting < 700000):
+        return None
+
+    if not (0 < northing < 1250000):
+        return None
+
+    east_km = int(easting / 1000) 
+    north_km = int(northing / 1000)
+
+    lle = (OSTN_EE_BASE + OSTN_EE_SHIFTS[east_km + north_km * 701])/1000
+    lre = (OSTN_EE_BASE + OSTN_EE_SHIFTS[east_km + north_km * 701 + 1])/1000
+    ule = (OSTN_EE_BASE + OSTN_EE_SHIFTS[east_km + north_km * 701 + 701])/1000
+    ure = (OSTN_EE_BASE + OSTN_EE_SHIFTS[east_km + north_km * 701 + 702])/1000
+
+    lln = (OSTN_NN_BASE + OSTN_NN_SHIFTS[east_km + north_km * 701])/1000
+    lrn = (OSTN_NN_BASE + OSTN_NN_SHIFTS[east_km + north_km * 701 + 1])/1000
+    uln = (OSTN_NN_BASE + OSTN_NN_SHIFTS[east_km + north_km * 701 + 701])/1000
+    urn = (OSTN_NN_BASE + OSTN_NN_SHIFTS[east_km + north_km * 701 + 702])/1000
+
+    t = (easting / 1000) % 1
+    u = (northing / 1000) % 1
+
+    f0 = (1-t) * (1-u)
+    f1 = t * (1-u)
+    f2 = (1-t) * u
+    f3 = t * u
+
+    return (
+        f0 * lle + f1 * lre + f2 * ule + f3 * ure,
+        f0 * lln + f1 * lrn + f2 * uln + f3 * urn
+    )
+
 
 def _find_OSTN02_shifts_at(easting, northing):
     """Get the OSTN02 shifts at a pseudo grid reference.
