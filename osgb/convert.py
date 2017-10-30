@@ -215,7 +215,7 @@ def ll_to_grid(lat, lon, model='WGS84', rounding=-1):
 
     A point in the sea, to the north-west of Coll
     >>> ll_to_grid(56.75, -7)
-    (94469.613, 773209.469)
+    (94469.613, 773209.471)
 
     The numbers returned may be negative if your latitude and longitude are
     far enough south and west, but beware that the transformation is less
@@ -328,7 +328,7 @@ def _project_onto_grid(lat, lon, model):
 
     II = nu/2  * sp * cp
     III = nu/24 * sp * cp**3 * (5 - tp * tp + 9*eta2)
-    IIIA = nu/720 * sp * cp**5 * (61 - (58 + tp * tp) * tp * tp)
+    IIIA = nu/720 * sp * cp**5 * (61 - 58 * tp**2 + tp**4)
 
     IV = nu*cp
     V = nu/6 * cp**3 * (eta2 + 1 - tp * tp)
