@@ -4,7 +4,7 @@ osgb
 Python routines for working with grid references as defined by the Ordnance
 Survey of Great Britain (OSGB).
 
-Toby Thurston -- 28 Oct 2017 
+Toby Thurston -- 10 Nov 2017 
 
 The functions in this module convert from OSGB grid references to and from GPS
 Lat/Lon with using OSGB formulae and the OSTN15 data set.  Conversions are
@@ -38,16 +38,16 @@ and the results should be, identical.
 
 # contents
 
+    LICENCE.txt
     README.md
-    setup.py
     osgb/convert.py
     osgb/gridder.py
     osgb/mapping.py
-    osgb/ostn02.data
+    osgb/ostn_east_shift_82140
+    osgb/ostn_north_shift_-84180
     scripts/bngl
     scripts/make_map_locker
+    setup.py
     test/bench_mark.py
-    test/osgb_os_data.py 
-
-
-
+    test/grid_test_known_points.txt
+    test/test_os_data.py
