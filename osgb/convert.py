@@ -97,7 +97,9 @@ def grid_to_ll(easting, northing, model='WGS84'):
     (52.6575703, 1.71792158)
 
     None the less, the routines will produce lots more decimal places, so
-    that you can choose what rounding you want.
+    that you can choose what rounding you want, although they aren't really
+    meaningful beyond nine places, since the conversion routines supplied
+    by the OS are only designed to be accurate to about 1mm (8 places).
 
     Hoy
     >>> grid_to_ll(323223, 1004000, model='OSGB36')
@@ -311,26 +313,26 @@ def _project_onto_grid(lat, lon, model):
     sp = math.sin(phi)
     tp = sp/cp # cos phi cannot be zero in GB
 
-    a, b, n, e2 = ELLIPSOID_MODELS[model]
+    _, _, n, e2 = ELLIPSOID_MODELS[model]
 
     p_plus = phi + ORIGIN_PHI
     p_minus = phi - ORIGIN_PHI
 
-    I = b * CONVERGENCE_FACTOR * (
+    I = CONVERGENCE_FACTOR * ELLIPSOID_MODELS[model][1] * (
         (1 + n * (1 + 5/4*n * (1 + n))) * p_minus
         - 3*n * (1 + n * (1 + 7/8*n)) * math.sin(p_minus) * math.cos(p_plus)
         + (15/8*n * (n * (1 + n))) * math.sin(2*p_minus) * math.cos(2*p_plus)
         - 35/24*n**3 * math.sin(3*p_minus) * math.cos(3*p_plus)
     )
 
-    nu = a * CONVERGENCE_FACTOR / math.sqrt(1 - e2 * sp * sp)
+    nu = ELLIPSOID_MODELS[model][0] * CONVERGENCE_FACTOR / math.sqrt(1 - e2 * sp * sp)
     eta2 = (1 - e2 * sp * sp) / (1 - e2) - 1
 
     II = nu/2  * sp * cp
-    III = nu/24 * sp * cp**3 * (5 - tp * tp + 9*eta2)
-    IIIA = nu/720 * sp * cp**5 * (61 - 58 * tp**2 + tp**4)
+    III = nu/24 * sp * cp**3 * (5 - tp * tp + 9 * eta2)
+    IIIA = nu/720 * sp * cp**5 * (61 + (-58 + tp * tp) * tp * tp)
 
-    IV = nu*cp
+    IV = nu * cp
     V = nu/6 * cp**3 * (eta2 + 1 - tp * tp)
     VI = nu/120 * cp**5 * (5 + (-18 + tp * tp) * tp * tp + 14 * eta2 - 58 * tp * tp * eta2)
 
@@ -354,11 +356,15 @@ def _reverse_project_onto_ellipsoid(easting, northing, model):
     >>> _reverse_project_onto_ellipsoid(400000.0, 233553.731330343, 'OSGB36')
     (52.0, -2.0)
 
+    >>> (lat, lon) = _reverse_project_onto_ellipsoid(651409.903, 313177.270, 'OSGB36')
+    >>> print('{:.8f} {:.8f}'.format(lat, lon))
+    52.65757030 1.71792158
+
     '''
 
-    a, b, n, e2 = ELLIPSOID_MODELS[model]
+    _, _, n, e2 = ELLIPSOID_MODELS[model]
 
-    af = a * CONVERGENCE_FACTOR
+    af = CONVERGENCE_FACTOR * ELLIPSOID_MODELS[model][0]
 
     dn = northing - ORIGIN_NORTHING
     de = easting - ORIGIN_EASTING
@@ -368,7 +374,7 @@ def _reverse_project_onto_ellipsoid(easting, northing, model):
     while True:
         p_plus = phi + ORIGIN_PHI
         p_minus = phi - ORIGIN_PHI
-        M = b * CONVERGENCE_FACTOR * (
+        M = CONVERGENCE_FACTOR * ELLIPSOID_MODELS[model][1] * (
             (1 + n * (1 + 5/4*n*(1 + n)))*p_minus
             - 3*n*(1+n*(1+7/8*n))  * math.sin(p_minus) * math.cos(p_plus)
             + (15/8*n * (n*(1+n))) * math.sin(2*p_minus) * math.cos(2*p_plus)
@@ -389,8 +395,8 @@ def _reverse_project_onto_ellipsoid(easting, northing, model):
     eta2 = nu/rho - 1
 
     VII = tp / (2 * rho * nu)
-    VIII = tp / (24 * rho * nu**3) * (5 + 3 * tp * tp + eta2 - 9 * tp * tp * eta2)
-    IX = tp / (720 * rho * nu**5) * (61 + (90 + 45 * tp * tp) * tp * tp)
+    VIII = (5 + 3 * tp * tp + eta2 - 9 * tp * tp * eta2) * tp / (24 * rho * nu**3)
+    IX = (61 + (90 + 45 * tp * tp) * tp * tp) * tp / (720 * rho * nu**5)
 
     secp = 1/cp
 

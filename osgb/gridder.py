@@ -1,5 +1,5 @@
 # coding: utf-8
-# pylint: disable=C0103,C0303
+# pylint: disable=C0103,C0303,W0231
 """Parse and format OSGB grid reference strings
 
 Toby Thurston -- 28 Oct 2017 
@@ -552,10 +552,16 @@ def parse_grid(*grid_elements, **kwargs):
         pass
     
     # probably now a sheet name rather than a SQ number
+    # so hand off to the sheet reference parser
+    return _get_easting_northing_from_sheet_reference(grid_string)
+
+def _get_easting_northing_from_sheet_reference(possible_map_gr):
+    '''Find a grid reference from a sheet number (with optional local GR)'''
+
     # so lets try to decompose the string version of the input
-    ok = re.match(r'^([A-Z]:)?([0-9NEWSOL/]+?)(\.[a-z]+)?(?:[ -/.]([ 0-9]+))?$', grid_string)
+    ok = re.match(r'^([A-Z]:)?([0-9NEWSOL/]+?)(\.[a-z]+)?(?:[ -/.]([ 0-9]+))?$', possible_map_gr)
     if not ok:
-        raise GarbageError(grid_string)
+        raise GarbageError(possible_map_gr)
 
     (prefix, sheet_number, suffix, numbers) = ok.groups()
 

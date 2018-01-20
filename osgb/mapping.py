@@ -5,6 +5,13 @@ Toby Thurston -- 19 Mar 2016
 """
 from __future__ import unicode_literals
 
+name_for_map_series = {
+    'A': 'OS Landranger',
+    'B': 'OS Explorer',
+    'C': 'OS One-Inch 7th series',
+    'H': 'Harvey British Mountain Maps',
+    'J': 'Harvey Superwalker',
+}
 map_locker = {
 "A:1" : { 'bbox' : [[428200, 1180000], [469000, 1220600]], 'area' : '1601.7025', 'series' : 'A', 'number' : '1', 'parent' : 'A:1', 'title' : 'Shetland – Yell, Unst and Fetlar', 'polygon' : [[429000,1180000],[469000,1180000],[469000,1220000],[462300,1220000],[462000,1220150],[461500,1220550],[461300,1220600],[461000,1220550],[460400,1220300],[460250,1220000],[429000,1220000],[429000,1187400],[428200,1187000],[428200,1186450],[429000,1185600],[429000,1180000]] },
 "A:2" : { 'bbox' : [[433000, 1156000], [473000, 1196000]], 'area' : '1600', 'series' : 'A', 'number' : '2', 'parent' : 'A:2', 'title' : 'Shetland – Sullom Voe & Whalsay', 'polygon' : [[433000,1156000],[473000,1156000],[473000,1196000],[433000,1196000],[433000,1156000]] },

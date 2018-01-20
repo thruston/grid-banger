@@ -4,13 +4,14 @@ osgb
 Python routines for working with grid references as defined by the Ordnance
 Survey of Great Britain (OSGB).
 
-Toby Thurston -- 10 Nov 2017 
+Toby Thurston -- 31 December 2017
 
 The functions in this module convert from OSGB grid references to and from GPS
-Lat/Lon with using OSGB formulae and the OSTN15 data set.  Conversions are
-accurate to approximately +/- 1mm.  The scope of OSGB is limited to the same
-coverage as the Ordnance Survey maps:  England, Wales, Scotland, and the Isle
-of Man, but not Northern Ireland, nor the Channel Islands.   
+Latitude and Longitude, using OSGB formulae and the OSTN15 data set.
+Conversions are accurate to approximately +/- 1mm.  The scope of OSGB is
+limited to the same coverage as the Ordnance Survey maps:  England, Wales,
+Scotland, and the Isle of Man, but not Northern Ireland, nor the Channel
+Islands.   
 
 The implementation uses the Ordnance Survey's high-precision dataset called
 OSTN15.  This dataset is freely available for public use, but remains © Crown
@@ -36,6 +37,8 @@ and the results should be, identical.
     grid_ref = osgb.format_grid(324231, 231423)
     (easting, northing) = osgb.parse_grid("TQ213455")
 
+Each of the modules contains detailed documentation and examples in "doctest" format.
+
 # contents
 
     LICENCE.txt
@@ -45,8 +48,10 @@ and the results should be, identical.
     osgb/mapping.py
     osgb/ostn_east_shift_82140
     osgb/ostn_north_shift_-84180
+    osgb/gb-coastline.shapes
     scripts/bngl
     scripts/make_map_locker
+    scripts/plot_maps.py
     setup.py
     test/bench_mark.py
     test/grid_test_known_points.txt
