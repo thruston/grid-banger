@@ -15,7 +15,7 @@ Islands.
 
 The implementation uses the Ordnance Survey's high-precision dataset called
 OSTN15.  This dataset is freely available for public use, but remains © Crown
-copyright, Ordnance Survey and the Ministry of Defence (MOD) 2015. All rights
+copyright, Ordnance Survey and the Ministry of Defence (MOD) 2016. All rights
 reserved.
 
 The modules are designed to work with Python 2.7 or better and with Python 3.4 or better.
@@ -39,10 +39,26 @@ and the results should be, identical.
 
 Each of the modules contains detailed documentation and examples in "doctest" format.
 
+    pydoc osgb/convert.py
+    pydoc osgb/gridder.py
+
+The scripts directory contains a handy command line conversion tool.  Try
+
+    bngl TQ 109 324
+    bngl --show 51.48 0
+    bngl --help
+
+And a feature called plotmaps.py - if you have a current Tex distribution with "mpost" installed, 
+this will produce a PDF of the National Grid, optionally with the outlines of all the OS maps.
+
+    python3 scripts/plot_maps.py --series A
+
+
 # contents
 
     LICENCE.txt
     README.md
+    setup.py
     osgb/convert.py
     osgb/gridder.py
     osgb/mapping.py
@@ -52,7 +68,12 @@ Each of the modules contains detailed documentation and examples in "doctest" fo
     scripts/bngl
     scripts/make_map_locker
     scripts/plot_maps.py
-    setup.py
     test/bench_mark.py
     test/grid_test_known_points.txt
-    test/test_os_data.py
+    test/ostn-standard-points-to-grid.py
+    test/ostn-standard-points-to-ll.py
+    test/OSTN15_OSGM15_TestFiles_README.txt
+    test/OSTN15_OSGM15_TestInput_ETRStoOSGB.txt
+    test/OSTN15_OSGM15_TestInput_OSGBtoETRS.txt
+    test/OSTN15_OSGM15_TestOutput_ETRStoOSGB.txt
+    test/OSTN15_OSGM15_TestOutput_OSGBtoETRS.txt
