@@ -4,7 +4,7 @@ osgb
 Python routines for working with grid references as defined by the
 Ordnance Survey of Great Britain (OSGB).
 
-Toby Thurston -- 23 Jan 2018
+Toby Thurston -- 06 Mar 2018
 
 The functions in this module convert from OSGB grid references to and
 from GPS Latitude and Longitude, using OSGB formulae and the OSTN15 data
@@ -15,12 +15,12 @@ nor the Channel Islands.
 
 The implementation uses the Ordnance Survey's high-precision dataset
 called OSTN15. This dataset is freely available for public use, but
-remains © Crown copyright, Ordnance Survey and the Ministry of Defence
+remains (c) Crown copyright, Ordnance Survey and the Ministry of Defence
 (MOD) 2016. All rights reserved.
 
-The modules are designed to work with Python 2.7 or better and with
-Python 3.4 or better. With Python 2, they are slightly faster than with
-Python 3, but the functions are, and the results should be, identical.
+The modules are designed to work with Python 2.7 or better and with Python 3.4
+or better. With Python 2, they are very slightly faster than with Python 3, but
+the functions are, and the results should be, identical.
 
 install
 -------
@@ -59,7 +59,7 @@ The scripts directory contains a handy command line conversion tool. Try
     bngl --show 51.48 0
     bngl --help
 
-And a feature called plotmaps.py - if you have a current Tex
+And a feature called plotmaps.py - if you have a current TeX
 distribution with "mpost" installed, this will produce a PDF of the
 National Grid, optionally with the outlines of all the OS maps.
 
@@ -77,7 +77,35 @@ You can run "python3 -m doctest" against the main modules, and on "test/grid_tes
 You can also run the "test/ostn_standard_points.." routines to check that there are no error
 converting the forty standard points given by the OSGB.
 
+::
+
+    python -m doctest osgb/convert.py
+    python -m doctest osgb/gridder.py
+    python -m doctest osgb/mapping.py
+    python -m doctest test/grid_test_known_points.txt
+    python test/ostn_standard_points_to_grid.py
+    python test/ostn_standard_points_to_ll.py
+
+    python3 -m doctest osgb/convert.py
+    python3 -m doctest osgb/gridder.py
+    python3 -m doctest osgb/mapping.py
+    python3 -m doctest test/grid_test_known_points.txt
+    python3 test/ostn_standard_points_to_grid.py
+    python3 test/ostn_standard_points_to_ll.py
+
 You can also run "test/bench_mark.py" to see how fast you can go on your system.
+
+::
+
+    python test/bench_mark.py
+    python3 test/bench_mark.py
+
+this sholuld produce something like:
+
+::
+
+    ll_to_grid: 83783/s 0.0119 ms per call
+    grid_to_ll: 23210/s 0.0431 ms per call
 
 contents
 --------
@@ -85,7 +113,7 @@ contents
 ::
 
     LICENCE.txt
-    README.md
+    README.rst
     setup.py
     osgb/convert.py
     osgb/gridder.py
