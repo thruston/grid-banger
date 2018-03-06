@@ -1,7 +1,8 @@
 #! /usr/bin/env python3
 """Test routine for OSGB conversions.
 
-Check that we can transform OSGB test input into the correct OSGB test output
+Check that we can transform OSGB test grid refs into the given OSGB lat/lons
+with an error of less that 0.02 mm
 
 Toby Thurston -- 22 Jan 2018 
 """
@@ -35,6 +36,8 @@ if __name__ == "__main__":
                 continue
             expected_output[r['PointID']] = (float(r['ETRSEast/Lat']), float(r['ETRSNorth/Long']))
 
+    acceptable_error_mm = 0.02
+
     for k in sorted(test_input):
         (lat, lon) = osgb.grid_to_ll(*test_input[k])
         phi = math.radians(lat)
@@ -51,10 +54,11 @@ if __name__ == "__main__":
             print('Test point {}  dLat: {:+.3f} mm  dLon: {:+.3f} mm'.format(k, delta_lat_mm, delta_lon_mm))
 
         try:
-            assert abs(delta_lat_mm) < 0.014
+            assert abs(delta_lat_mm) < acceptable_error_mm
         except AssertionError:
             print(k, delta_lat_mm)
+
         try:
-            assert abs(delta_lon_mm) < 0.007
+            assert abs(delta_lon_mm) < acceptable_error_mm
         except AssertionError:
             print(k, delta_lon_mm)

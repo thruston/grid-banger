@@ -8,6 +8,7 @@ Toby Thurston -- 15 Mar 2016
 # pylint: disable=C0103, C0303
 from __future__ import print_function
 import argparse
+import re
 import subprocess
 
 import osgb
@@ -26,17 +27,24 @@ def get_likely_lon_lat(possible_number):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--show", action='store_true')
-    parser.add_argument("grid_or_ll_strings", type=str, nargs='*', default=['SP', '101', '203'], 
-                        help="A grid reference string or lat/lon pair")
+    parser = argparse.ArgumentParser(description="Convert coordinates to and from OSGB grid refs and lat/lon.")
+    parser.add_argument("--show", action='store_true', help="Show this place on Streetview.co.uk")
+    parser.add_argument("grid_or_ll_element", type=str, nargs='*', default=['SP', '101', '203'], 
+                        help="A grid reference string or lat/lon pair.")
     args = parser.parse_args()
 
-    agenda = ' '.join(args.grid_or_ll_strings)
+    agenda = ' '.join(args.grid_or_ll_element)
     alphabet = ' 1234567890-.+/:ABCDEFGHJKLMNOPQRSTUVWXYZabcdef' # there is no I in this
     agenda = ''.join(x for x in agenda if x in alphabet) # and remove unwanted characters 
 
-    latlon = list(get_likely_lon_lat(x) for x in agenda.split())
+    m = re.match(r'([456]\d) ([012345]?\d) ([012345]?\d) N (\d) ([012345]?\d) ([012345]?\d) ([EW])', agenda)
+    if m:
+        (ha, ma, sa, hb, mb, sb, hemi) = m.groups()
+        latlon = [int(ha) + int(ma) / 60 + int(sa) / 3600, (int(hb) + int(mb) / 60 + int(sb) / 3600)]
+        if hemi == 'W':
+            latlon[1] = -latlon[1]
+    else:
+        latlon = list(get_likely_lon_lat(x) for x in agenda.split())
 
     # if the arguments consists of just two likely looking numbers...
     # You can't just say "all(floats)" because 0 is a valid Longitude

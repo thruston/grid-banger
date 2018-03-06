@@ -1,4 +1,5 @@
 '''Print a map of the National Grid, optionally with an index of OS maps'''
+from __future__ import print_function, division
 
 # pylint: disable=C0103, C0301, C0330
 
@@ -28,8 +29,8 @@ if __name__ == "__main__":
         description=textwrap.dedent('''\
         plot_maps - make a nice index sheet for a map series.
 
-        If you have a working TeXLive installation with GhostScript installed, you
-        can use it to produce PDF index maps of the various map series included.
+        If you have a working TeXLive installation with MetaPost and GhostScript installed, 
+        you can use it to produce PDF index maps of the various map series included.
         '''),
         epilog="Toby Thurston -- 15 Nov 2017"
     )
@@ -39,9 +40,8 @@ if __name__ == "__main__":
     parser.add_argument('--towns', action='store_true', help="Show some town names")
     parser.add_argument('--tests', action='store_true', help="Show the OSGB test locations")
     parser.add_argument('--error', action='store_true', help="Show an indication of the round trip error")
-    parser.add_argument('--ostn', action='store_true', help="Show the boundaries of the OSTN02 data set")
     parser.add_argument('--nogrid', action='store_true', help="Don't show the grid")
-    parser.add_argument('--nograt', action='store_true', help="Don't show the latitude / longitude graticle")
+    parser.add_argument('--nograt', action='store_true', help="Don't show the latitude / longitude graticule")
     parser.add_argument('--nocoast', action='store_true', help="Don't show the coast lines")
     parser.add_argument('--nomp', action='store_true', help="Don't try to run MP")
     args = parser.parse_args()
@@ -55,13 +55,13 @@ if __name__ == "__main__":
         else:
             pdffile = "National_grid.pdf"
 
-    # Set the scale according to the chosen paper size 
+    # Set the scale according to the chosen paper size
     scale = {'A4': 1680, 'A3': 1189, 'A2': 840, 'A1': 597, 'A0': 420}[args.paper]
 
     # gather all the paths we will need from the map locker polygons
-    path_for = dict() # a list of the actual MP maps 
+    path_for = dict() # a list of the actual MP maps
     sides = list() # a list of keys to path_for
-    insets = list() # another list of (different) keys to path_for
+    insets = list() # another list of (different) keys to path_for
     if args.series:
         for k in osgb.mapping.map_locker:
             # Skip maps not wanted
@@ -88,14 +88,13 @@ if __name__ == "__main__":
     # open a tempory file for MP
     plotter = tempfile.NamedTemporaryFile(mode='wt', prefix='plot_maps_', suffix='.mp', dir='.', delete=False)
 
-    # Starting making the MP file
+    # Starting making the MP file
     print('prologues := 3; outputtemplate := "%j.eps"; beginfig(1); defaultfont := "phvr8r";', file=plotter)
 
     # sides and insets will have anything in if we chose one or more series
     for k in sides + insets:
         print("fill {} withcolor (0.98, 0.906, 0.71);".format(path_for[k]), file=plotter)
 
-    # show 
     if args.error:
         for x in range(70):
             e = x * 10000 + 5000
@@ -159,7 +158,7 @@ if __name__ == "__main__":
         print('label("{}" infont "phvr8r" scaled {}, {}) withcolor .8 white;'.format("HP", 3600/scale, mid), file=plotter)
 
     if not args.nocoast:
-        coast_shapes = pkgutil.get_data('osgb', 'gb-coastline.shapes')
+        coast_shapes = pkgutil.get_data('osgb', 'gb_coastline.shapes')
         if coast_shapes:
             print("drawoptions(withpen pencircle scaled 0.2 withcolor (0, 172/255, 226/255));", file=plotter)
             poly_path = list()
@@ -319,7 +318,7 @@ if __name__ == "__main__":
     print("endfig;end.", file=plotter)
     plotter.close()
 
-    # Now deal with MP (unless asked not to)
+    # Now deal with MP (unless asked not to)
     if not args.nomp:
         try:
             subprocess.check_call(['mpost', plotter.name])

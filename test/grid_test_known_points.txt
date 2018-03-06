@@ -3,7 +3,7 @@ Toby Thurston  2017-10-28
 
 Test known locations convert correctly using doctest
 
-try "python -m doctest -v %"
+try "python3 -m doctest -v %"
 
 >>> import osgb
 
@@ -49,5 +49,5 @@ Hills above Loch Achall, OS Sheet 20
 
 # Greenwich -- test for long == 0
 -------------------------------------------
->>> osgb.format_grid(osgb.ll_to_grid(lat=51.5, lon=0, model='OSGB36'))
-'TQ 388 798'
+>>> print(osgb.format_grid(osgb.ll_to_grid(lat=51.5, lon=0, model='OSGB36')))
+TQ 388 798
