@@ -100,7 +100,7 @@ You can also run "test/bench_mark.py" to see how fast you can go on your system.
     python test/bench_mark.py
     python3 test/bench_mark.py
 
-this sholuld produce something like:
+This should produce something like:
 
 ::
 
