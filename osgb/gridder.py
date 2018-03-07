@@ -368,6 +368,15 @@ def parse_grid(*grid_elements, **kwargs):
 
         The spaces are optional in all cases.
 
+        >>> parse_grid(" TA 123 678 ")
+        (512300, 467800)
+        
+        >>> parse_grid(" TA123 678 ")
+        (512300, 467800)
+        
+        >>> parse_grid(" TA 123678")
+        (512300, 467800)
+
         >>> parse_grid("TA123678")
         (512300, 467800)
 
@@ -531,7 +540,7 @@ def parse_grid(*grid_elements, **kwargs):
         figs = min(5, max(figs, len(str(ee)), len(str(nn))))
         grid_string = '{0} {1:0{3}d} {2:0{3}d}'.format(sq, int(ee), int(nn), figs)
     else:
-        grid_string = ' '.join(str(x) for x in grid_elements)
+        grid_string = ' '.join(str(x).strip() for x in grid_elements)
 
     # normal case : TQ 123 456 etc
     offsets = _get_grid_square_offsets(grid_string)

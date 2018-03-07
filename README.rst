@@ -4,7 +4,7 @@ osgb
 Python routines for working with grid references as defined by the
 Ordnance Survey of Great Britain (OSGB).
 
-Toby Thurston -- 06 Mar 2018
+Toby Thurston -- April 2018
 
 The functions in this module convert from OSGB grid references to and
 from GPS Latitude and Longitude, using OSGB formulae and the OSTN15 data
@@ -12,6 +12,10 @@ set. Conversions are accurate to approximately +/- 1mm. The scope of
 OSGB is limited to the same coverage as the Ordnance Survey maps:
 England, Wales, Scotland, and the Isle of Man, but not Northern Ireland,
 nor the Channel Islands.
+
+This implementation supersedes the osgb module written by Paul Agapow;
+existing code should work unmodified, but the exported functions have been 
+re-implemented, so the results will be more accurate.
 
 The implementation uses the Ordnance Survey's high-precision dataset
 called OSTN15. This dataset is freely available for public use, but
@@ -44,7 +48,7 @@ usage
     (easting, northing) = osgb.parse_grid("TQ213455")
 
 Each of the modules contains detailed documentation and examples in
-"doctest" format.
+"doctest" format:
 
 ::
 
@@ -68,6 +72,35 @@ National Grid, optionally with the outlines of all the OS maps.
     python3 scripts/plot_maps.py --series A
 
 The two PDF files included are examples of the output.
+
+The original osgb functions are also still provided for compatibility with old code, so
+that code like this, should still work:
+
+::
+
+    from osgb import osgb_to_lonlat, lonlat_to_osgb
+
+    (lon, lat) = osgb_to_lonlat("SD 30271 33770")
+    grid_ref = lonlat_to_osgb(-3.058695, 53.795346, digits=5)
+
+Note that the older "osgb_to_lonlat" returns latitude and longitude in the
+opposite order to the newer "grid_to_ll".   If in doubt, note that for valid
+OSGB grid references latitude will *always* be greater than longitude.
+
+Note also that the older "lonlat_to_osgb" expects the arguments to have longitude 
+first and latitude second.  However the re-implemented version will determine 
+the correct sequence automatically, so the calling order does not actually matter.
+
+The re-implementation also adds an optional "model=" parameter to each of these functions, 
+so you can use them with WGS84 coordinates.  Model defaults to "OSGB36", so if you leave
+it out you will get the old functionality.
+
+::
+
+    (lon, lat) = osgb_to_lonlat("SD 30271 33770", model="WGS84")
+    grid_ref = lonlat_to_osgb(-3.058695, 53.795346, digits=5, model="WGS84")
+
+
 
 test
 ----

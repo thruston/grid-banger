@@ -1,7 +1,7 @@
-# pylint: disable=C0103, C0301
+# pylint: disable=C0103, C0301, W0231
 """Conversion between latitude/longitude and OSGB grid references.
 
-Toby Thurston -- 28 Oct 2017
+Toby Thurston -- 07 Mar 2018
 
 """
 from __future__ import print_function, division, unicode_literals
@@ -623,7 +623,6 @@ def _shift_ll_from_osgb36_to_wgs84(lat, lon):
     (xb, yb, zb) = _small_Helmert_transform_for_OSGB(-1, xa, ya, za)
     (latx, lonx, _) = _cartesian_to_llh(xb, yb, zb, 'WGS84')
     return (latx, lonx)
-
 
 def _shift_ll_from_wgs84_to_osgb36(lat, lon):
     '''Approximate conversion of WGS84 spherical coordinates to OSGB36.
