@@ -23,16 +23,16 @@ def lonlat_to_osgb(lon, lat, digits=3, formatted=True, model='OSGB36'):
 
         For example::
 
-        >>> lonlat_to_osgb (1.088978, 52.129892)
-        'TM 114 525'
-        >>> lonlat_to_osgb (1.088978, 52.129892, formatted=False)
-        'TM114525'
-        >>> lonlat_to_osgb (1.088978, 52.129892, 5)
-        'TM 11400 52500'
+        >>> print(lonlat_to_osgb (1.088978, 52.129892))
+        TM 114 525
+        >>> print(lonlat_to_osgb (1.088978, 52.129892, formatted=False))
+        TM114525
+        >>> print(lonlat_to_osgb (1.088978, 52.129892, 5))
+        TM 11400 52500
 
         In the re-implemented version you can reverse arguments if you want to...
-        >>> lonlat_to_osgb(52.129892, 1.088978, 5)
-        'TM 11400 52500'
+        >>> print(lonlat_to_osgb(52.129892, 1.088978, 5))
+        TM 11400 52500
 
 
     """
