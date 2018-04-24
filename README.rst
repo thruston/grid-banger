@@ -23,8 +23,9 @@ remains (c) Crown copyright, Ordnance Survey and the Ministry of Defence
 (MOD) 2016. All rights reserved.
 
 The modules are designed to work with Python 2.7 or better and with Python 3.4
-or better. With Python 2, they are very slightly faster than with Python 3, but
-the functions are, and the results should be, identical.
+or better. With Python 2.7, they are very slightly faster than with Python 3.6, but
+the functions are, and the results should be, identical.  If you are using Python 3, 
+then use `python3` (or whatever you call it) instead of `python` below.
 
 install
 -------
@@ -32,7 +33,6 @@ install
 ::
 
     python setup.py install
-    python3 setup.py install
 
 usage
 -----
@@ -69,7 +69,7 @@ National Grid, optionally with the outlines of all the OS maps.
 
 ::
 
-    python3 scripts/plot_maps.py --series A
+    python scripts/plot_maps.py --series A
 
 The two PDF files included are examples of the output.
 
@@ -105,7 +105,7 @@ it out you will get the old functionality.
 test
 ----
 
-You can run "python3 -m doctest" against the main modules, and on "test/grid_test_known_points"
+You can run "python -m doctest" against the main modules, and on "test/grid_test_known_points"
 
 You can also run the "test/ostn_standard_points.." routines to check that there are no error
 converting the forty standard points given by the OSGB.
@@ -119,26 +119,20 @@ converting the forty standard points given by the OSGB.
     python test/ostn_standard_points_to_grid.py
     python test/ostn_standard_points_to_ll.py
 
-    python3 -m doctest osgb/convert.py
-    python3 -m doctest osgb/gridder.py
-    python3 -m doctest osgb/mapping.py
-    python3 -m doctest test/grid_test_known_points.txt
-    python3 test/ostn_standard_points_to_grid.py
-    python3 test/ostn_standard_points_to_ll.py
 
 You can also run "test/bench_mark.py" to see how fast you can go on your system.
 
 ::
 
     python test/bench_mark.py
-    python3 test/bench_mark.py
 
 This should produce something like:
 
 ::
 
-    ll_to_grid: 83783/s 0.0119 ms per call
-    grid_to_ll: 23210/s 0.0431 ms per call
+    Grid banger bench mark running under CPython 3.6.4 on Darwin-17.4.0-x86_64-i386-64bit
+    ll_to_grid: 84231/s 0.0119 ms per call
+    grid_to_ll: 22564/s 0.0443 ms per call
 
 contents
 --------
