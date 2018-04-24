@@ -152,6 +152,7 @@ contents
     scripts/bngl
     scripts/make_map_locker
     scripts/plot_maps.py
+    scripts/whatmaps.py
     test/bench_mark.py
     test/grid_test_known_points.txt
     test/ostn_standard_points_to_grid.py
