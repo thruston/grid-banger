@@ -69,8 +69,8 @@ def osgb_to_lonlat(osgb_str, model='OSGB36'):
             True
             >>> 52.1298 < lat1 < 52.1299
             True
-            >>> (lon1, lat1)
-            (1.0889749561079356, 52.12989202825308)
+            >>> (round(lon1, 14), round(lat1, 14))
+            (1.08897495610794, 52.12989202825308)
 
             
             # accepts poor formating
@@ -86,8 +86,8 @@ def osgb_to_lonlat(osgb_str, model='OSGB36'):
             True
             >>> 52.1298 < lat3 < 52.1299
             True
-            >>> (lon3, lat3)
-            (1.0889749561079356, 52.12989202825308)
+            >>> (round(lon3, 14), round(lat3, 14))
+            (1.08897495610794, 52.12989202825308)
 
 
     
