@@ -10,11 +10,13 @@ from __future__ import division, print_function
 
 import argparse
 import collections
+
 import gpxpy
 import osgb
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Find all the maps needed to cover a route or track in the GPX file")
+    parser = argparse.ArgumentParser(
+        description="Find all the maps needed to cover a route or track in the GPX file")
     parser.add_argument("gpxfile", help="The name of your GPX file")
     parser.add_argument("--series", default="A",
                         help="Which map series? A: Landranger, B: Explorer, C: One-inch, ...")
