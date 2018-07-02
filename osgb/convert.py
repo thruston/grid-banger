@@ -33,11 +33,19 @@ else:
     type_code = b'H'
 
 OSTN_EE_SHIFTS = array.array(type_code)
-OSTN_EE_SHIFTS.fromstring(pkgutil.get_data("osgb", "ostn_east_shift_82140"))
+try:
+    OSTN_EE_SHIFTS.fromstring(pkgutil.get_data("osgb", "./ostn_east_shift_82140"))
+except TypeError:
+    print("Failed to load OSTN eastings from file", file=sys.stderr)
+    raise
 OSTN_EE_BASE = 82140
 
 OSTN_NN_SHIFTS = array.array(type_code)
-OSTN_NN_SHIFTS.fromstring(pkgutil.get_data("osgb", "ostn_north_shift_-84180"))
+try:
+    OSTN_NN_SHIFTS.fromstring(pkgutil.get_data("osgb", "./ostn_north_shift_-84180"))
+except TypeError:
+    print("Failed to load OSTN northings from file", file=sys.stderr)
+    raise
 OSTN_NN_BASE = -84180
 
 class Error(Exception):
@@ -67,11 +75,13 @@ def grid_to_ll(easting, northing, model='WGS84'):
     An optional argument 'model' defines the graticule model to use.  The default is WGS84,
     the standard model used for the GPS network and for references given on Google Earth
     or Wikipedia, etc.  The only other valid value is 'OSGB36' which is the traditional model
-    used in the UK before GPS.  Latitude and longitude marked around the edges of OS Landranger maps
-    are given in the OSGB36 model.
+    used in the UK before GPS.  Latitude and longitude marked around the edges of OS maps published
+    before 2015 are given in the OSGB36 model.
+
+    Accuracy:
 
     Grid references rounded to whole metres will give lat/lon that are accurate to about 5 decimal places.
-    0.00001 of a degree of latitude is about 70cm in the UK, 0.00001 of a degree of longitude is about 1m.
+    In the UK, 0.00001 of a degree of latitude is about 70cm, 0.00001 of a degree of longitude is about 1m.
 
     Glendessary
     >>> lat, lon = grid_to_ll(197575, 794790, model='OSGB36')
@@ -96,10 +106,10 @@ def grid_to_ll(easting, northing, model='WGS84'):
     >>> (round(lat, 8), round(lon, 8))
     (52.6575703, 1.71792158)
 
-    None the less, the routines will produce lots more decimal places, so
-    that you can choose what rounding you want, although they aren't really
-    meaningful beyond nine places, since the conversion routines supplied
-    by the OS are only designed to be accurate to about 1mm (8 places).
+    The routines will produce lots more decimal places, so that you can choose
+    what rounding you want, although they aren't really meaningful beyond nine
+    places, since the conversion routines supplied by the OS are only designed
+    to be accurate to about 1mm (8 places).
 
     Hoy
     >>> grid_to_ll(323223, 1004000, model='OSGB36')
@@ -112,6 +122,10 @@ def grid_to_ll(easting, northing, model='WGS84'):
     Keyword arguments for Glen Achcall
     >>> grid_to_ll(easting=217380, northing=896060, model='OSGB36')
     (57.91671633292687, -5.083330213971718)
+
+    Parsing traditional grid references:
+
+    To parse a grid reference like TQ183506, see the other module: gridder.py
 
     """
 
@@ -326,15 +340,15 @@ def _project_onto_grid(lat, lon, model):
     )
 
     nu = ELLIPSOID_MODELS[model][0] * CONVERGENCE_FACTOR / math.sqrt(1 - e2 * sp * sp)
-    eta2 = (1 - e2 * sp * sp) / (1 - e2) - 1
+    etasq = (1 - e2 * sp * sp) / (1 - e2) - 1
 
     II = nu/2  * sp * cp
-    III = nu/24 * sp * cp**3 * (5 - tp * tp + 9 * eta2)
+    III = nu/24 * sp * cp**3 * (5 - tp * tp + 9 * etasq)
     IIIA = nu/720 * sp * cp**5 * (61 + (-58 + tp * tp) * tp * tp)
 
     IV = nu * cp
-    V = nu/6 * cp**3 * (eta2 + 1 - tp * tp)
-    VI = nu/120 * cp**5 * (5 + (-18 + tp * tp) * tp * tp + 14 * eta2 - 58 * tp * tp * eta2)
+    V = nu/6 * cp**3 * (etasq + 1 - tp * tp)
+    VI = nu/120 * cp**5 * (5 + (-18 + tp * tp) * tp * tp + 14 * etasq - 58 * tp * tp * etasq)
 
     dl = lon / 57.29577951308232087679815481410517 - ORIGIN_LAMBDA
     north = ORIGIN_NORTHING + I + (II + (III + IIIA * dl * dl) * dl * dl) * dl * dl
@@ -392,10 +406,10 @@ def _reverse_project_onto_ellipsoid(easting, northing, model):
     sqrtsplat = math.sqrt(splat)
     nu = af / sqrtsplat
     rho = af * (1 - e2) / (splat*sqrtsplat)
-    eta2 = nu/rho - 1
+    etasq = nu/rho - 1
 
     VII = tp / (2 * rho * nu)
-    VIII = (5 + 3 * tp * tp + eta2 - 9 * tp * tp * eta2) * tp / (24 * rho * nu**3)
+    VIII = (5 + 3 * tp * tp + etasq - 9 * tp * tp * etasq) * tp / (24 * rho * nu**3)
     IX = (61 + (90 + 45 * tp * tp) * tp * tp) * tp / (720 * rho * nu**5)
 
     secp = 1/cp
