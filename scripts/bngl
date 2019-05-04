@@ -34,8 +34,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     agenda = ' '.join(args.grid_or_ll_element)
-    alphabet = ' 1234567890-.+/:ABCDEFGHJKLMNOPQRSTUVWXYZabcdef' # there is no I in this
+   
+    if agenda[:1] in 'sntoh' and agenda[1:2] in 'abcdefghjklmnopqrstuvwxyz':
+        agenda = agenda[:2].upper() + agenda[2:]
+    alphabet = ' 1234567890-.,+/:ABCDEFGHJKLMNOPQRSTUVWXYZabcdef' # there is no I in this
     agenda = ''.join(x for x in agenda if x in alphabet) # and remove unwanted characters 
+    agenda = agenda.replace(',',' ') # allow commas to separate numbers
 
     m = re.match(r'([456]\d) ([012345]?\d) ([012345]?\d) N (\d) ([012345]?\d) ([012345]?\d) ([EW])', agenda)
     if m:
