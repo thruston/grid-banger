@@ -35,10 +35,11 @@ if __name__ == "__main__":
 
     agenda = ' '.join(args.grid_or_ll_element)
     alphabet = ' 1234567890-.+/:ABCDEFGHJKLMNOPQRSTUVWXYZabcdef' # there is no I in this
+    agenda = agenda.replace(',', ' ') # treat commas as spaces
     agenda = ''.join(x for x in agenda if x in alphabet) # and remove unwanted characters 
 
     m = re.match(r'([456]\d) ([012345]?\d) ([012345]?\d) N (\d) ([012345]?\d) ([012345]?\d) ([EW])', agenda)
-    if m:
+    if m is not None:
         (ha, ma, sa, hb, mb, sb, hemi) = m.groups()
         latlon = [int(ha) + int(ma) / 60 + int(sa) / 3600, (int(hb) + int(mb) / 60 + int(sb) / 3600)]
         if hemi == 'W':

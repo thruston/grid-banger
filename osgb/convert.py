@@ -305,6 +305,22 @@ def ll_to_grid(lat, lon, model='WGS84', rounding=-1):
 
     return (round(easting, rounding), round(northing, rounding))
 
+def _compute_M(phi, model):
+    '''Compute the first term of the solution given phi.
+
+    Uses the ellipsoid constants (so needs the model name)
+    '''
+    p_plus = phi + ORIGIN_PHI
+    p_minus = phi - ORIGIN_PHI
+    _, b, n, _ = ELLIPSOID_MODELS[model]
+
+    return CONVERGENCE_FACTOR * b * (
+        (1 + n * (1 + 5/4*n * (1 + n))) * p_minus
+        - 3*n * (1 + n * (1 + 7/8*n)) * math.sin(p_minus) * math.cos(p_plus)
+        + (15/8*n * (n * (1 + n))) * math.sin(2*p_minus) * math.cos(2*p_plus)
+        - 35/24*n**3 * math.sin(3*p_minus) * math.cos(3*p_plus)
+    )
+
 def _project_onto_grid(lat, lon, model):
     '''Project spherical coordinates (lat, lon) onto a flat grid.
 
@@ -327,19 +343,11 @@ def _project_onto_grid(lat, lon, model):
     sp = math.sin(phi)
     tp = sp/cp # cos phi cannot be zero in GB
 
-    _, _, n, e2 = ELLIPSOID_MODELS[model]
+    a, _, _, e2 = ELLIPSOID_MODELS[model]
 
-    p_plus = phi + ORIGIN_PHI
-    p_minus = phi - ORIGIN_PHI
+    I = _compute_M(phi, model)
 
-    I = CONVERGENCE_FACTOR * ELLIPSOID_MODELS[model][1] * (
-        (1 + n * (1 + 5/4*n * (1 + n))) * p_minus
-        - 3*n * (1 + n * (1 + 7/8*n)) * math.sin(p_minus) * math.cos(p_plus)
-        + (15/8*n * (n * (1 + n))) * math.sin(2*p_minus) * math.cos(2*p_plus)
-        - 35/24*n**3 * math.sin(3*p_minus) * math.cos(3*p_plus)
-    )
-
-    nu = ELLIPSOID_MODELS[model][0] * CONVERGENCE_FACTOR / math.sqrt(1 - e2 * sp * sp)
+    nu = CONVERGENCE_FACTOR * a / math.sqrt(1 - e2 * sp * sp)
     etasq = (1 - e2 * sp * sp) / (1 - e2) - 1
 
     II = nu/2  * sp * cp
@@ -376,7 +384,7 @@ def _reverse_project_onto_ellipsoid(easting, northing, model):
 
     '''
 
-    _, _, n, e2 = ELLIPSOID_MODELS[model]
+    _, _, _, e2 = ELLIPSOID_MODELS[model]
 
     af = CONVERGENCE_FACTOR * ELLIPSOID_MODELS[model][0]
 
@@ -386,14 +394,7 @@ def _reverse_project_onto_ellipsoid(easting, northing, model):
     phi = ORIGIN_PHI + dn/af
 
     while True:
-        p_plus = phi + ORIGIN_PHI
-        p_minus = phi - ORIGIN_PHI
-        M = CONVERGENCE_FACTOR * ELLIPSOID_MODELS[model][1] * (
-            (1 + n * (1 + 5/4*n*(1 + n)))*p_minus
-            - 3*n*(1+n*(1+7/8*n))  * math.sin(p_minus) * math.cos(p_plus)
-            + (15/8*n * (n*(1+n))) * math.sin(2*p_minus) * math.cos(2*p_plus)
-            - 35/24*n**3           * math.sin(3*p_minus) * math.cos(3*p_plus)
-        )
+        M = _compute_M(phi, model)
         if abs(dn-M) < 0.00001: # HUNDREDTH_MM
             break
         phi = phi + (dn-M)/af
@@ -647,3 +648,7 @@ def _shift_ll_from_wgs84_to_osgb36(lat, lon):
     (xb, yb, zb) = _small_Helmert_transform_for_OSGB(+1, xa, ya, za)
     (latx, lonx, _) = _cartesian_to_llh(xb, yb, zb, 'OSGB36')
     return (latx, lonx)
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()
