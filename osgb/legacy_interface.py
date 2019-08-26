@@ -5,32 +5,38 @@ def lonlat_to_osgb(lon, lat, digits=3, formatted=True, model='OSGB36'):
     """Convert a longitude and latitude to Ordnance Survey grid reference.
 
     :Parameters:
-        lon     Longitude, presumed to be in OSG36 degrees (unless you set model='WGS84').
+
+        lon     
+                Longitude, presumed to be in OSG36 degrees (unless you set model='WGS84').
         
-        lat     Latitude, ditto.
+        lat     
+                Latitude, ditto.
         
-        digits  The number of digits to use for each direction in the final
+        digits  
+                The number of digits to use for each direction in the final
                 grid reference. 3 by default, grid references are up to 6.
                 
         formatted
                 Should the OSGB reference be nicely formatted (with whitespace)?
                 By default true.
 
-        model   OSGB36 or WGS84, default OSGB36
+        model   
+                OSGB36 or WGS84, default OSGB36
 
-        :Returns:
+    :Returns:
                 A string giving a formatted OSGB reference.
 
         For example::
 
-        >>> print(lonlat_to_osgb (1.088978, 52.129892))
-        TM 114 525
-        >>> print(lonlat_to_osgb (1.088978, 52.129892, formatted=False))
-        TM114525
-        >>> print(lonlat_to_osgb (1.088978, 52.129892, 5))
-        TM 11400 52500
+            >>> print(lonlat_to_osgb (1.088978, 52.129892))
+            TM 114 525
+            >>> print(lonlat_to_osgb (1.088978, 52.129892, formatted=False))
+            TM114525
+            >>> print(lonlat_to_osgb (1.088978, 52.129892, 5))
+            TM 11400 52500
 
         In the re-implemented version you can reverse arguments if you want to...
+        
         >>> print(lonlat_to_osgb(52.129892, 1.088978, 5))
         TM 11400 52500
 
@@ -53,10 +59,11 @@ def osgb_to_lonlat(osgb_str, model='OSGB36'):
             osgb_str
                     An Ordnance Survey grid reference in "letter-number" format.
                     Case and spaces are cleaned up by this function, and resolution
-                    automatically detected, so that so that 'TM114 525', 'TM114525',
-                    and 'TM 11400 52500' are all recognised and identical. 
+                    automatically detected, so that so that ``TM114 525``, ``TM114525``,
+                    and ``TM 11400 52500`` are all recognised and identical. 
 
-            model   OSGB36 or WGS84
+            model   
+                    OSGB36 or WGS84
     
     :Returns:
             The longitude and latitude of the grid reference, according to the chosen model.

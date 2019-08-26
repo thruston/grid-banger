@@ -1,7 +1,7 @@
 # pylint: disable=C0103, C0301, W0231
-"""Conversion between latitude/longitude and OSGB grid references.
+"""Conversion between latitude/longitude coordinates and OSGB grid references.
 
-Toby Thurston -- 07 Mar 2018
+This module provides the core routines that implement the OS conversion formulae.
 
 """
 from __future__ import print_function, division, unicode_literals
@@ -28,24 +28,36 @@ CONVERGENCE_FACTOR = 0.9996012717
 
 # OSTN data
 if sys.version_info > (3, 0):
-    type_code = 'H'
-else:
-    type_code = b'H'
+    OSTN_EE_SHIFTS = array.array('H')
+    try:
+        OSTN_EE_SHIFTS.frombytes(pkgutil.get_data("osgb", "ostn_east_shift_82140"))
+    except TypeError:
+        print("Failed to load OSTN eastings from file", file=sys.stderr)
+        raise
 
-OSTN_EE_SHIFTS = array.array(type_code)
-try:
-    OSTN_EE_SHIFTS.fromstring(pkgutil.get_data("osgb", "./ostn_east_shift_82140"))
-except TypeError:
-    print("Failed to load OSTN eastings from file", file=sys.stderr)
-    raise
+    OSTN_NN_SHIFTS = array.array('H')
+    try:
+        OSTN_NN_SHIFTS.frombytes(pkgutil.get_data("osgb", "ostn_north_shift_-84180"))
+    except TypeError:
+        print("Failed to load OSTN northings from file", file=sys.stderr)
+        raise
+
+else: # Python2 does arrays slightly differently
+    OSTN_EE_SHIFTS = array.array(b'H')
+    try:
+        OSTN_EE_SHIFTS.fromstring(pkgutil.get_data("osgb", "ostn_east_shift_82140"))
+    except TypeError:
+        print("Failed to load OSTN eastings from file", file=sys.stderr)
+        raise
+
+    OSTN_NN_SHIFTS = array.array(b'H')
+    try:
+        OSTN_NN_SHIFTS.fromstring(pkgutil.get_data("osgb", "ostn_north_shift_-84180"))
+    except TypeError:
+        print("Failed to load OSTN northings from file", file=sys.stderr)
+        raise
+
 OSTN_EE_BASE = 82140
-
-OSTN_NN_SHIFTS = array.array(type_code)
-try:
-    OSTN_NN_SHIFTS.fromstring(pkgutil.get_data("osgb", "./ostn_north_shift_-84180"))
-except TypeError:
-    print("Failed to load OSTN northings from file", file=sys.stderr)
-    raise
 OSTN_NN_BASE = -84180
 
 class Error(Exception):
@@ -66,42 +78,49 @@ class UndefinedModelError(Error):
         return "{}".format(self.spam)
 
 def grid_to_ll(easting, northing, model='WGS84'):
-    """Convert OSGB (easting, northing) to latitude and longitude.
+    """
+    Convert OSGB (easting, northing) to latitude and longitude.
 
-    Input: an (easting, northing) pair in metres from the false point of origin of the grid.
+    Input
+        an (easting, northing) pair in metres from the false point of origin of the grid.
+        Note that if you are starting with a grid reference string like ``TQ124095``
+        you will need to use the `parse_grid` functions in osgb.gridder to parse it
+        into an easting, northing pair before you can call this function.
 
-    Output: a (latitude, longitude) pair in degrees, postive East/North negative West/South
+    Output
+        a (latitude, longitude) pair in degrees, postive East/North negative West/South
 
-    An optional argument 'model' defines the graticule model to use.  The default is WGS84,
-    the standard model used for the GPS network and for references given on Google Earth
-    or Wikipedia, etc.  The only other valid value is 'OSGB36' which is the traditional model
-    used in the UK before GPS.  Latitude and longitude marked around the edges of OS maps published
-    before 2015 are given in the OSGB36 model.
+    An optional argument 'model' defines the graticule model to use.  The
+    default is WGS84, the standard model used for the GPS network and for
+    references given on Google Earth or Wikipedia, etc.  The only other valid
+    value is 'OSGB36' which is the traditional model used in the UK before GPS.
+    Latitude and longitude marked around the edges of OS maps published before
+    2015 are given in the OSGB36 model.
 
-    Accuracy:
+    `Accuracy`: Grid references rounded to whole metres will give lat/lon that
+    are accurate to about 5 decimal places.  In the UK, 0.00001 of a degree of
+    latitude is about 70cm, 0.00001 of a degree of longitude is about 1m.
 
-    Grid references rounded to whole metres will give lat/lon that are accurate to about 5 decimal places.
-    In the UK, 0.00001 of a degree of latitude is about 70cm, 0.00001 of a degree of longitude is about 1m.
+    For example:
 
-    Glendessary
+    >>> # Glendessary, the graticule marker on Sheet 33
     >>> lat, lon = grid_to_ll(197575, 794790, model='OSGB36')
     >>> (round(lat, 5), round(lon, 5))
     (56.99998, -5.3333)
 
-    Scorriton
+    >>> # Scorriton
     >>> lat, lon = grid_to_ll(269995, 68361, model='OSGB36')
     >>> (round(lat, 5), round(lon, 5))
     (50.5, -3.83333)
 
-    But Grid references in millimetres (and in the first case on the central meridian) will
-    give results accurate to 8 decimal places.
+    But Grid references in millimetres will give results accurate to 8 decimal places.
 
-    Cranbourne Chase
+    >>> # Cranbourne Chase, on the central meridian
     >>> lat, lon = grid_to_ll(400000, 122350.044, model='OSGB36')
     >>> (round(lat, 8), round(lon, 8))
     (51.0, -2.0)
 
-    Example from OSGB
+    >>> # The example from the OSGB documentation
     >>> lat, lon = grid_to_ll(651409.903, 313177.27, model='OSGB36')
     >>> (round(lat, 8), round(lon, 8))
     (52.6575703, 1.71792158)
@@ -111,21 +130,23 @@ def grid_to_ll(easting, northing, model='WGS84'):
     places, since the conversion routines supplied by the OS are only designed
     to be accurate to about 1mm (8 places).
 
-    Hoy
+    >>> # Hoy (Orkney)
     >>> grid_to_ll(323223, 1004000, model='OSGB36')
     (58.91680150461385, -3.3333320035568224)
 
-    Glen Achcall
+    >>> # Glen Achcall
     >>> grid_to_ll(217380, 896060, model='OSGB36')
     (57.91671633292687, -5.083330213971718)
 
-    Keyword arguments for Glen Achcall
+    Finally here is an example of how to use the optional keyword arguments:
+
+    >>> # Keyword arguments for Glen Achcall
     >>> grid_to_ll(easting=217380, northing=896060, model='OSGB36')
     (57.91671633292687, -5.083330213971718)
 
-    Parsing traditional grid references:
-
-    To parse a grid reference like TQ183506, see the other module: gridder.py
+    Converting traditional grid references: To convert a grid reference string
+    like ``TQ183506``, you need to parse it into a full (easting, northing) pair
+    first, using osgb.gridder
 
     """
 
@@ -168,34 +189,34 @@ def grid_to_ll(easting, northing, model='WGS84'):
 def ll_to_grid(lat, lon, model='WGS84', rounding=-1):
     """Convert a (latitude, longitude) pair to an OSGB grid (easting, northing) pair.
 
-    Output: a tuple containing (easting, northing) in metres from the grid origin.
+    Output
+        a tuple containing (easting, northing) in metres from the grid origin.
 
-    Input: The arguments should be supplied as real numbers representing
-    decimal degrees, like this
+    Input
+        The arguments should be supplied as real numbers representing decimal degrees, like this:
 
-    >>> ll_to_grid(51.5, -2.1)
-    (393154.813, 177900.607)
+        >>> ll_to_grid(51.5, -2.1)
+        (393154.813, 177900.607)
 
-    Following the normal convention, positive arguments mean North or
-    East, negative South or West.
+        Following the normal convention, positive arguments mean North or
+        East, negative South or West.
 
-    If you have data with degrees, minutes and seconds, you can convert them
-    to decimals like this:
+        If you have data with degrees, minutes and seconds, you can convert them
+        to decimals like this:
 
-    >>> ll_to_grid(51+25/60, 0-5/60-2/3600)
-    (533338.156, 170369.238)
+        >>> ll_to_grid(51+25/60, 0-5/60-2/3600)
+        (533338.156, 170369.238)
 
-    >>> ll_to_grid(52 + 39/60 + 27.2531/3600, 1 + 43/60 + 4.5177/3600, model='OSGB36')
-    (651409.903, 313177.27)
+        >>> ll_to_grid(52 + 39/60 + 27.2531/3600, 1 + 43/60 + 4.5177/3600, model='OSGB36')
+        (651409.903, 313177.27)
 
-    If you have trouble remembering the order of the arguments, or the
-    returned values, note that latitude comes before longitude in the
-    alphabet too, as easting comes before northing.
-
-    However since reasonable latitudes for the OSGB are in the range 49 to 61,
-    and reasonable longitudes in the range -9 to +2, ll_to_grid accepts
-    argument in either order.  If your longitude is larger than your latitude,
-    then the values of the arguments will be silently swapped:
+    If you have trouble remembering the order of the arguments, or the returned
+    values, note that latitude comes before longitude in the alphabet too, as
+    easting comes before northing.  However since reasonable latitudes for the
+    OSGB are in the range 49 to 61, and reasonable longitudes in the range -9
+    to +2, the ``ll_to_grid`` function accepts argument in either order.  If
+    your longitude is larger than your latitude, then the values of the
+    arguments will be silently swapped:
 
     >>> ll_to_grid(-2.1, 51.5)
     (393154.813, 177900.607)
@@ -206,7 +227,7 @@ def ll_to_grid(lat, lon, model='WGS84', rounding=-1):
     (393154.813, 177900.607)
 
     The easting and northing will be returned as the distance in metres from
-    the `false point of origin' of the British Grid (which is a point some way
+    the 'false point of origin' of the British Grid (which is a point some way
     to the south-west of the Scilly Isles).  If you want the result presented
     in a more traditional grid reference format you should pass the results to
     osgb.format_grid()
@@ -219,17 +240,17 @@ def ll_to_grid(lat, lon, model='WGS84', rounding=-1):
     the nearest metre in this case, although you probably should not rely on
     the results being more accurate than about 5m.
 
-    Somewhere in London
+    >>> # Somewhere in London
     >>> ll_to_grid(51.3, 0)
     (539524.836, 157551.913)
 
-    Far north
+    >>> # Far north
     >>> ll_to_grid(61.3, 0)
     (507242.0, 1270342.0)
 
     The coverage extends quite a long way off shore.
 
-    A point in the sea, to the north-west of Coll
+    >>> # A point in the sea, to the north-west of Coll
     >>> ll_to_grid(56.75, -7)
     (94469.613, 773209.471)
 
@@ -240,21 +261,21 @@ def ll_to_grid(lat, lon, model='WGS84', rounding=-1):
     >>> ll_to_grid(51.3, -10)
     (-157250.0, 186110.0)
 
-    ll_to_grid() also takes an optional argument that sets the ellipsoid
-    model to use.  This defaults to `WGS84', the name of the normal model
+    ``ll_to_grid`` also takes an optional argument that sets the ellipsoid
+    model to use.  This defaults to ``WGS84``, the name of the normal model
     for working with normal GPS coordinates, but if you want to work with
     the traditional latitude and longitude values printed on OS maps then
     you should add an optional model argument
 
-        >>> ll_to_grid(49, -2, model='OSGB36')
-        (400000.0, -100000.0)
+    >>> ll_to_grid(49, -2, model='OSGB36')
+    (400000.0, -100000.0)
 
 
     Incidentally, the grid coordinates returned by this call are the
-    coordinates of the `true point of origin' of the British grid.  You should
+    coordinates of the 'true point of origin' of the British grid.  You should
     get back an easting of 400000.0 for any point with longitude 2W since this is
     the central meridian used for the OSGB projection.  However you will get a
-    slightly different value unless you specify "model='OSGB36'"
+    slightly different value unless you specify ``model='OSGB36'``
     since the WGS84 meridians are not quite the same as OSGB36.
 
         >>> ll_to_grid(52, -2, model='OSGB36')
@@ -263,7 +284,7 @@ def ll_to_grid(lat, lon, model='WGS84', rounding=-1):
         >>> ll_to_grid(52, -2, model='WGS84')
         (400096.274, 233505.403)
 
-    If the model is not 'OSGB36' or 'WGS84' you will get an UndefinedModelError exception:
+    If the model is not ``OSGB36`` or ``WGS84`` you will get an UndefinedModelError exception:
 
         >>> ll_to_grid(52, -2, model='EDM50') # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
