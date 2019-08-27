@@ -5,12 +5,11 @@ Python routines for working with grid references as defined by the Ordnance Surv
 
 Toby Thurston -- April 2018
 
-The functions in this module convert from OSGB grid references to and
-from GPS Latitude and Longitude, using OSGB formulae and the OSTN15 data
-set. Conversions are accurate to approximately +/- 1mm. The scope of
-OSGB is limited to the same coverage as the Ordnance Survey maps:
-England, Wales, Scotland, and the Isle of Man, but not Northern Ireland,
-nor the Channel Islands.
+The functions in this module convert from OSGB grid references to and from GPS
+Latitude and Longitude, using formulae, and the OSTN15 data set, supplied by
+ORGB. Conversions are accurate to approximately +/- 1mm. The scope is limited
+to the same coverage as the Ordnance Survey maps: England, Wales, Scotland, and
+the Isle of Man, but not Northern Ireland, nor the Channel Islands.
 
 This implementation supersedes the osgb module written by Paul Agapow;
 existing code should work unmodified, but the exported functions have been 
@@ -23,15 +22,15 @@ remains (c) Crown copyright, Ordnance Survey and the Ministry of Defence
 
 The modules are designed to work with Python 2.7 or better and with Python 3.4
 or better. With Python 2.7, they are very slightly faster than with Python 3.6, but
-the functions are, and the results should be, identical.  If you are using Python 3, 
-then use `python3` (or whatever you call it) instead of `python` below.
+the functions are, and the results should be, identical.  If you are still using Python 2, 
+then use `python2` (or whatever you call it) instead of `python3` below.
 
 install
 -------
 
 ::
 
-    python setup.py install
+    python3 setup.py install
 
 usage
 -----
@@ -68,7 +67,7 @@ National Grid, optionally with the outlines of all the OS maps.
 
 ::
 
-    python scripts/plot_maps.py --series A
+    python3 scripts/plot_maps.py --series A
 
 The two PDF files included are examples of the output.
 
@@ -106,24 +105,29 @@ test
 
 You can run "python -m doctest" against the main modules, and on "test/grid_test_known_points"
 
-You can also run the "test/ostn_standard_points.." routines to check that there are no error
+You can also run the "test/test_ostn_standard_points.." routines to check that there are no error
 converting the forty standard points given by the OSGB.
 
 ::
 
-    python -m doctest osgb/convert.py
-    python -m doctest osgb/gridder.py
-    python -m doctest osgb/mapping.py
-    python -m doctest test/grid_test_known_points.txt
-    python test/ostn_standard_points_to_grid.py
-    python test/ostn_standard_points_to_ll.py
+    python3 -m doctest osgb/convert.py
+    python3 -m doctest osgb/gridder.py
+    python3 -m doctest osgb/mapping.py
+    python3 test/test_ostn_standard_points_to_grid.py
+    python3 test/test_ostn_standard_points_to_ll.py
+    python3 test/test_some_more_places.py
 
+or, if you have pytest installed, you can do that in one go with 
+
+::
+
+    python3 -m pytest --doctest-modules
 
 You can also run "test/bench_mark.py" to see how fast you can go on your system.
 
 ::
 
-    python test/bench_mark.py
+    python3 test/bench_mark.py
 
 This should produce something like:
 

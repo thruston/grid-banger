@@ -2,6 +2,16 @@
 """Data for OSGB and other walkers maps in England, Wales, Scotland, and Isle of Man.
 
 Toby Thurston -- 19 Mar 2016 
+
+>>> 'A' in name_for_map_series
+True
+
+>>> all(map_locker[label]['series'] in name_for_map_series for label in map_locker)
+True
+
+>>> all('bbox' in map_locker[label] for label in map_locker)
+True
+
 """
 from __future__ import unicode_literals
 
