@@ -210,6 +210,10 @@ def ll_to_grid(lat, lon, model='WGS84', rounding=-1):
         >>> ll_to_grid(52 + 39/60 + 27.2531/3600, 1 + 43/60 + 4.5177/3600, model='OSGB36')
         (651409.903, 313177.27)
 
+        But if you are still using python2 then be sure to ``import division`` so that
+        you get the correct semantics for division when both numerator and denominator
+        are integers.
+
     If you have trouble remembering the order of the arguments, or the returned
     values, note that latitude comes before longitude in the alphabet too, as
     easting comes before northing.  However since reasonable latitudes for the
@@ -572,14 +576,23 @@ def _llh_to_cartesian(lat, lon, H, model):
     (3841039.2016489906, -201300.3346975291, 5070178.453880734)
 
     >>> (x, y, z) =  _llh_to_cartesian(52, 1, 30, 'WGS84')
-    >>> _cartesian_to_llh(x, y, z, 'WGS84')
-    (52.0, 1.0, 29.999999999068677)
+    >>> tuple(round(x, 8) for x in _cartesian_to_llh(x, y, z, 'WGS84'))
+    (52.0, 1.0, 30.0)
+
+    Note that you dont get more that 8 places of precision here.  Hence the
+    `round(x, 8)` in the test. But that gives you precision to within 1mm which
+    was the design point originally chosen by the OSGB.
 
     Numbers from the worked example in the OSGB guide
+    
     e2 == 6.6705397616E-03
     nu == 6.3910506260E+06
+
     >>> tuple(round(x,4) for x in _llh_to_cartesian(52 + 39/60 + 27.2531/3600, 1 + 43/60 + 4.5177/3600, 24.700, 'OSGB36'))
     (3874938.8497, 116218.6238, 5047168.2073)
+
+    Note that here we have rounded to 4 places because these are in units of metres 
+    rather than degrees.  
 
     '''
     a, _, _, e2 = ELLIPSOID_MODELS[model]

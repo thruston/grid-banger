@@ -8,6 +8,7 @@ Toby Thurston -- 15 Mar 2016
 # pylint: disable=C0103, C0303
 from __future__ import print_function
 import argparse
+import random
 import re
 import subprocess
 
@@ -28,15 +29,24 @@ def get_likely_lon_lat(possible_number):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Convert coordinates to and from OSGB grid refs and lat/lon.")
+    parser.add_argument("--random", action="store_true", help="Pick a place at random")
     parser.add_argument("--show", action='store_true', help="Show this place on Streetview.co.uk")
     parser.add_argument("grid_or_ll_element", type=str, nargs='*', default=['SP', '101', '203'], 
                         help="A grid reference string or lat/lon pair.")
     args = parser.parse_args()
 
-    agenda = ' '.join(args.grid_or_ll_element)
-    alphabet = ' 1234567890-.+/:ABCDEFGHJKLMNOPQRSTUVWXYZabcdef' # there is no I in this
-    agenda = agenda.replace(',', ' ') # treat commas as spaces
-    agenda = ''.join(x for x in agenda if x in alphabet) # and remove unwanted characters 
+    if args.random:
+        map = random.choice(list(x for x in osgb.mapping.map_locker.values() if x['series'] == 'A'))
+        bb = map['bbox']
+        e = random.randint(bb[0][0], bb[1][0])
+        n = random.randint(bb[0][1], bb[1][1])
+        agenda = osgb.format_grid(e, n)
+
+    else:
+        agenda = ' '.join(args.grid_or_ll_element)
+        alphabet = ' 1234567890-.+/:ABCDEFGHJKLMNOPQRSTUVWXYZabcdef' # there is no I in this
+        agenda = agenda.replace(',', ' ') # treat commas as spaces
+        agenda = ''.join(x for x in agenda if x in alphabet) # and remove unwanted characters 
 
     m = re.match(r'([456]\d) ([012345]?\d) ([012345]?\d) N (\d) ([012345]?\d) ([012345]?\d) ([EW])', agenda)
     if m is not None:
