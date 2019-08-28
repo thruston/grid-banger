@@ -4,4 +4,5 @@ python:
   - "3.4"
   - "3.5"
   - "3.6"
-script: pytest --doctest-modules --doctest-glob osgb/*.py
+  - "3.7"
+script: pytest --doctest-modules 
