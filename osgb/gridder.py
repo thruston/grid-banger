@@ -288,7 +288,7 @@ returned are in units of metres from the false origin of the grid.
 
 The arguments should be in one of the following three forms
 
--   A single string representing a grid reference
+- A single string representing a grid reference
 
     >>> parse_grid("TA 123 678")
     (512300, 467800)
@@ -337,7 +337,7 @@ The arguments should be in one of the following three forms
     (-296419, 916564)
 
 
- -  A two or three element list representing a grid reference
+- A two or three element list representing a grid reference
 
     >>> parse_grid('TA', 0, 0)
     (500000, 400000)
@@ -378,8 +378,8 @@ The arguments should be in one of the following three forms
     hectometres as in a traditional grid reference. The maximum is 5
     and the minimum is the length of the longer of easting or northing.
 
--   A string or a list representing a map and a local grid reference,
-    corresponding to the following examples:
+- A string or a list representing a map and a local grid reference,
+  corresponding to the following examples:
 
     >>> parse_grid('176/224711') # Caesar's Camp
     (522400, 171100)
@@ -603,6 +603,7 @@ def sheet_list(easting, northing, series='ABCHJ'):
 
     If the (easting, northing) pair is not covered by any map sheet you'll get
     an empty list
+
     >>> sheet_list(0, 0)
     []
 

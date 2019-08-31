@@ -1,8 +1,6 @@
 # coding: utf-8
 """Data for OSGB and other walkers maps in England, Wales, Scotland, and Isle of Man.
 
-Toby Thurston -- 19 Mar 2016 
-
 >>> 'A' in name_for_map_series
 True
 

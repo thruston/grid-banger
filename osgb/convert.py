@@ -83,21 +83,22 @@ def grid_to_ll(easting, northing, model='WGS84'):
 
     Input
         an (easting, northing) pair in metres from the false point of origin of the grid.
-        Note that if you are starting with a grid reference string like ``TQ124095``
-        you will need to use the `parse_grid` functions in osgb.gridder to parse it
-        into an easting, northing pair before you can call this function.
+
+        Note that if you are starting with a tradtional grid reference string like ``TQ183506``, 
+        you need to parse it into an (easting, northing) pair using the :py:func:`parse_grid`
+        function from :py:mod:`osgb.gridder` before you can pass it to this function.
 
     Output
-        a (latitude, longitude) pair in degrees, postive East/North negative West/South
+        a (latitude, longitude) pair in degrees; postive East/North, negative West/South
 
     An optional argument 'model' defines the graticule model to use.  The
-    default is WGS84, the standard model used for the GPS network and for
+    default is 'WGS84', the standard model used for the GPS network and for
     references given on Google Earth or Wikipedia, etc.  The only other valid
     value is 'OSGB36' which is the traditional model used in the UK before GPS.
-    Latitude and longitude marked around the edges of OS maps published before
-    2015 are given in the OSGB36 model.
+    Latitude and longitude coordinates marked around the edges of OS maps
+    published before 2015 are given in the OSGB36 model.
 
-    `Accuracy`: Grid references rounded to whole metres will give lat/lon that
+    **Accuracy**: Grid references rounded to whole metres will give lat/lon that
     are accurate to about 5 decimal places.  In the UK, 0.00001 of a degree of
     latitude is about 70cm, 0.00001 of a degree of longitude is about 1m.
 
@@ -143,11 +144,6 @@ def grid_to_ll(easting, northing, model='WGS84'):
     >>> # Keyword arguments for Glen Achcall
     >>> grid_to_ll(easting=217380, northing=896060, model='OSGB36')
     (57.91671633292687, -5.083330213971718)
-
-    Converting traditional grid references: To convert a grid reference string
-    like ``TQ183506``, you need to parse it into a full (easting, northing) pair
-    first, using osgb.gridder
-
     """
 
     (os_lat, os_lon) = _reverse_project_onto_ellipsoid(easting, northing, 'OSGB36')
@@ -234,7 +230,7 @@ def ll_to_grid(lat, lon, model='WGS84', rounding=-1):
     the 'false point of origin' of the British Grid (which is a point some way
     to the south-west of the Scilly Isles).  If you want the result presented
     in a more traditional grid reference format you should pass the results to
-    osgb.format_grid()
+    :py:func:`format_grid` from :py:mod:`osgb.gridder`.
 
     If the coordinates you supply are in the area covered by the OSTN
     transformation data, then the results will be rounded to 3 decimal places,
