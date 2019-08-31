@@ -12,7 +12,7 @@ OSGB - high-precision conversion between latitude / longitude and British grid r
 
    readme_link
    API
-
+   background
 
 
 Indices and tables
