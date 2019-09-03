@@ -7,7 +7,7 @@ Toby Thurston -- September 2019
 
 The functions in this module convert from OSGB grid references to and from GPS
 Latitude and Longitude, using formulae, and the OSTN15 data set, supplied by
-ORGB. Conversions are accurate to approximately +/- 1mm. The scope is limited
+OSGB. Conversions are accurate to approximately +/- 1mm. The scope is limited
 to the same coverage as the Ordnance Survey maps: England, Wales, Scotland, and
 the Isle of Man, but not Northern Ireland, nor the Channel Islands.
 
