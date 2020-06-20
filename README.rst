@@ -1,6 +1,9 @@
 osgb
 ====
 
+.. image:: https://travis-ci.org/thruston/grid-banger.svg?branch=master
+    :target: https://travis-ci.org/thruston/grid-banger
+
 Python routines for working with grid references as defined by the Ordnance Survey of Great Britain (OSGB).
 
 Toby Thurston -- September 2019
