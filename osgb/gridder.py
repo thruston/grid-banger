@@ -34,6 +34,19 @@ def get_sheet(key):
     except KeyError:
         return None
 
+"""Some checks for the maps
+
+>>> 'A' in name_for_map_series
+True
+
+>>> all(map_locker[label].series in name_for_map_series for label in map_locker)
+True
+
+>>> all(len(map_locker[label].bbox) == 2 for label in map_locker)
+True
+"""
+ 
+
 name_for_map_series = {
     'A': 'OS Landranger',
     'B': 'OS Explorer',

@@ -12,7 +12,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     d = 10 ** -args.diff if args.diff else 0.1;
-    print("{:g}".format(d))
+    print("{:g} difference in lat+lon makes this difference in metres...".format(d))
 
     for lat in range(60,49,-1):
         print(lat, end = ':')

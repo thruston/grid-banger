@@ -128,7 +128,6 @@ converting the forty standard points given by the OSGB.
 
     python3 -m doctest osgb/convert.py
     python3 -m doctest osgb/gridder.py
-    python3 -m doctest osgb/mapping.py
     python3 test/test_ostn_standard_points_to_grid.py
     python3 test/test_ostn_standard_points_to_ll.py
     python3 test/test_some_more_places.py
