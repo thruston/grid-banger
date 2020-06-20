@@ -162,7 +162,6 @@ contents
     setup.py
     osgb/convert.py
     osgb/gridder.py
-    osgb/mapping.py
     osgb/legacy_interface.py
     osgb/ostn_east_shift_82140
     osgb/ostn_north_shift_-84180
