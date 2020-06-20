@@ -2,7 +2,7 @@
 
 """Convert coordinates.
 
-Toby Thurston -- 15 Mar 2016
+Toby Thurston -- 20 Jun 2020
 """
 # allow free variable names and the occasional trailing whitespace character
 # pylint: disable=C0103, C0303
@@ -10,7 +10,7 @@ from __future__ import print_function
 import argparse
 import random
 import re
-import subprocess
+import webbrowser
 
 import osgb
 
@@ -106,4 +106,4 @@ if __name__ == "__main__":
 
     if args.show:
         url = 'http://www.streetmap.co.uk/map.srf?x={:06d}&y={:06d}&z=3'.format(int(e), int(n))
-        rc = subprocess.check_call(["/usr/bin/open", url])
+        webbrowser.open(url)
