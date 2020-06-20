@@ -13,7 +13,7 @@ setuptools.setup(
     packages=['osgb'],
     package_data={'osgb': ['ostn_east_shift_82140', 'ostn_north_shift_-84180', 'gb_coastline.shapes']},
     scripts=['scripts/bngl', 'scripts/whatmaps.py', 'scripts/plot_maps.py'],
-    classifiers=(
+    classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Environment :: Console",
         "Intended Audience :: Developers",
@@ -26,6 +26,6 @@ setuptools.setup(
         "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 3",
         "Topic :: Scientific/Engineering :: GIS",
-    ),
+        ],
     keywords='GIS geographic coordinates conversion',
 )
