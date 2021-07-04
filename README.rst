@@ -6,7 +6,7 @@ osgb
 
 Python routines for working with grid references as defined by the Ordnance Survey of Great Britain (OSGB).
 
-Toby Thurston -- September 2019
+Toby Thurston -- July 2021
 
 The functions in this module convert from OSGB grid references to and from GPS
 Latitude and Longitude, using formulae, and the OSTN15 data set, supplied by
@@ -98,9 +98,9 @@ reference for you. Try
 
 ::
 
-    bngl TQ 109 324
-    bngl --show 51.48 0
-    bngl --help
+    python3 bngl.py TQ 109 324
+    python3 bngl.py --show 51.48 0
+    python3 bngl.py --help
 
 2. The script called ``plot_maps.py`` will create a map of the OSGB grid system.
 To make this work you need to have a current TeX distribution with "mpost"
@@ -169,7 +169,7 @@ contents
     osgb/ostn_east_shift_82140
     osgb/ostn_north_shift_-84180
     osgb/gb_coastline.shapes
-    scripts/bngl
+    scripts/bngl.py
     scripts/make_map_locker
     scripts/plot_maps.py
     scripts/whatmaps.py

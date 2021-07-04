@@ -2,11 +2,11 @@
 
 """Convert coordinates.
 
-Toby Thurston -- 20 Jun 2020
+Toby Thurston -- 04 Jul 2021
 """
 # allow free variable names and the occasional trailing whitespace character
 # pylint: disable=C0103, C0303
-from __future__ import print_function
+
 import argparse
 import random
 import re
@@ -36,10 +36,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.random:
-        map = random.choice(list(x for x in osgb.mapping.map_locker.values() if x['series'] == 'A'))
-        bb = map['bbox']
-        e = random.randint(bb[0][0], bb[1][0])
-        n = random.randint(bb[0][1], bb[1][1])
+        map = random.choice(list(S for S in osgb.map_locker.values() if S.series == 'A'))
+        e = random.randint(map.bbox[0][0], map.bbox[1][0])
+        n = random.randint(map.bbox[0][1], map.bbox[1][1])
         agenda = osgb.format_grid(e, n)
 
     else:
@@ -74,7 +73,7 @@ if __name__ == "__main__":
 
     try:
         grid = osgb.format_grid(e, n)
-        maps = osgb.sheet_list(e, n)
+        maps = osgb.sheet_keys(e, n)
     except osgb.gridder.Error:
         grid = '??'
         maps = None
@@ -90,7 +89,7 @@ if __name__ == "__main__":
 
     try:
         grid = osgb.format_grid(oe, on)
-        maps = osgb.sheet_list(oe, on)
+        maps = osgb.sheet_keys(oe, on)
     except osgb.gridder.Error:
         grid = '??'
         maps = None

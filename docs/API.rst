@@ -13,15 +13,12 @@ OSGB Gridder
 .. automodule:: osgb.gridder
    :members:
 
-OSGB Mapping
-------------
-
-This module provides two dictionaries with data about British maps.  If you have
+Gridder also provides two dictionaries with data about British maps.  If you have
 ``import osgb`` at the top of your Python script you can refer to the dictionaries
 as::
 
-    osgb.mapping.name_for_map_series
-    osgb.mapping.map_locker
+    osgb.name_for_map_series
+    osgb.map_locker
 
 The first has just five entries, as follows::
 
@@ -35,18 +32,18 @@ The first has just five entries, as follows::
 
 The ``map_locker`` is rather larger; it has an entry for each sheet (and sub-sheet)
 in the five series.  The keys are the map labels consisting of the series letter + ``:`` + the sheet number.
-The values are dictionaries with data for the map.  Here is an example::
+The values are named tuples called "Sheet" with data for the map.  Here is an example::
 
     {
-        "A:4" : {
-            'bbox' : [[420000, 1107000], [460000, 1147000]],
-            'area' : '1600',
-            'series' : 'A',
-            'number' : '4',
-            'parent' : 'A:4',
-            'title' : 'Shetland – South Mainland',
-            'polygon' : [[420000,1107000],[460000,1107000],[460000,1147000],[420000,1147000],[420000,1107000]]
-        },
+        "A:4" : Sheet(
+            bbox = [[420000, 1107000], [460000, 1147000]],
+            area = 1600,
+            series = 'A',
+            number = '4',
+            parent = 'A:4',
+            title = 'Shetland – South Mainland',
+            polygon = [[420000,1107000],[460000,1107000],[460000,1147000],[420000,1147000],[420000,1107000]]
+        ),
     }
 
 - `bbox` is a list of two (easting, northing) pairs that give the LL and UR corners of the bounding box of the map.
@@ -56,6 +53,13 @@ The values are dictionaries with data for the map.  Here is an example::
 - `parent` is a the key of the parent sheet.  This is only relevant for insets and subsheets.
 - `title` a version of the title printed on the front of the map
 - `polygon` a list of (easting, northing) pairs that define the boundary of the map.  Note that the last pair should always equal the first pair.
+
+Example:
+    
+    for m in osgb.map_locker.values():
+        print(m.number, m.title)
+
+
 
 Legacy interface
 ----------------

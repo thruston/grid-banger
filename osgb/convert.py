@@ -27,6 +27,7 @@ ORIGIN_NORTHING = -100000.0
 CONVERGENCE_FACTOR = 0.9996012717
 
 # OSTN data
+# Arrays of bytes are handled one way in Python3...
 if sys.version_info > (3, 0):
     OSTN_EE_SHIFTS = array.array('H')
     try:
@@ -42,7 +43,8 @@ if sys.version_info > (3, 0):
         print("Failed to load OSTN northings from file", file=sys.stderr)
         raise
 
-else: # Python2 does arrays slightly differently
+# ... and another in Python2
+else:
     OSTN_EE_SHIFTS = array.array(b'H')
     try:
         OSTN_EE_SHIFTS.fromstring(pkgutil.get_data("osgb", "ostn_east_shift_82140"))
@@ -60,9 +62,11 @@ else: # Python2 does arrays slightly differently
 OSTN_EE_BASE = 82140
 OSTN_NN_BASE = -84180
 
+
 class Error(Exception):
     """Parent class for exceptions in this module"""
     pass
+
 
 class UndefinedModelError(Error):
     """Raised when the model given is undefined
@@ -77,6 +81,7 @@ class UndefinedModelError(Error):
     def __str__(self):
         return "{}".format(self.spam)
 
+
 def grid_to_ll(easting, northing, model='WGS84'):
     """
     Convert OSGB (easting, northing) to latitude and longitude.
@@ -84,7 +89,7 @@ def grid_to_ll(easting, northing, model='WGS84'):
     Input
         an (easting, northing) pair in metres from the false point of origin of the grid.
 
-        Note that if you are starting with a tradtional grid reference string like ``TQ183506``, 
+        Note that if you are starting with a tradtional grid reference string like ``TQ183506``,
         you need to parse it into an (easting, northing) pair using the :py:func:`parse_grid`
         function from :py:mod:`osgb.gridder` before you can pass it to this function.
 
@@ -326,6 +331,7 @@ def ll_to_grid(lat, lon, model='WGS84', rounding=-1):
 
     return (round(easting, rounding), round(northing, rounding))
 
+
 def _compute_M(phi, model):
     '''Compute the first term of the solution given phi.
 
@@ -341,6 +347,7 @@ def _compute_M(phi, model):
         + (15/8*n * (n * (1 + n))) * math.sin(2*p_minus) * math.cos(2*p_plus)
         - 35/24*n**3 * math.sin(3*p_minus) * math.cos(3*p_plus)
     )
+
 
 def _project_onto_grid(lat, lon, model):
     '''Project spherical coordinates (lat, lon) onto a flat grid.
@@ -362,7 +369,7 @@ def _project_onto_grid(lat, lon, model):
     phi = lat / 57.29577951308232087679815481410517
     cp = math.cos(phi)
     sp = math.sin(phi)
-    tp = sp/cp # cos phi cannot be zero in GB
+    tp = sp/cp  # cos phi cannot be zero in GB
 
     a, _, _, e2 = ELLIPSOID_MODELS[model]
 
@@ -371,7 +378,7 @@ def _project_onto_grid(lat, lon, model):
     nu = CONVERGENCE_FACTOR * a / math.sqrt(1 - e2 * sp * sp)
     etasq = (1 - e2 * sp * sp) / (1 - e2) - 1
 
-    II = nu/2  * sp * cp
+    II = nu/2 * sp * cp
     III = nu/24 * sp * cp**3 * (5 - tp * tp + 9 * etasq)
     IIIA = nu/720 * sp * cp**5 * (61 + (-58 + tp * tp) * tp * tp)
 
@@ -385,6 +392,7 @@ def _project_onto_grid(lat, lon, model):
 
     # return them with easting first
     return (east, north)
+
 
 def _reverse_project_onto_ellipsoid(easting, northing, model):
     '''Un-project from the grid plane back on to the globe.
@@ -416,19 +424,19 @@ def _reverse_project_onto_ellipsoid(easting, northing, model):
 
     while True:
         M = _compute_M(phi, model)
-        if abs(dn-M) < 0.00001: # HUNDREDTH_MM
+        if abs(dn - M) < 0.00001:  # HUNDREDTH_MM
             break
-        phi = phi + (dn-M)/af
+        phi = phi + (dn - M) / af
 
     cp = math.cos(phi)
     sp = math.sin(phi)
-    tp = sp/cp # math.cos phi cannot be zero in GB
+    tp = sp / cp  # math.cos phi cannot be zero in GB
 
     splat = 1 - e2 * sp * sp
     sqrtsplat = math.sqrt(splat)
     nu = af / sqrtsplat
     rho = af * (1 - e2) / (splat*sqrtsplat)
-    etasq = nu/rho - 1
+    etasq = nu / rho - 1
 
     VII = tp / (2 * rho * nu)
     VIII = (5 + 3 * tp * tp + etasq - 9 * tp * tp * etasq) * tp / (24 * rho * nu**3)
@@ -447,6 +455,7 @@ def _reverse_project_onto_ellipsoid(easting, northing, model):
     # now put into degrees & return
     return (phi * 57.29577951308232087679815481410517,
             lam * 57.29577951308232087679815481410517)
+
 
 def _find_OSTN_shifts_at(easting, northing):
     '''Get the OSTN shifted at a pseudo grid reference.
@@ -563,6 +572,7 @@ def _find_OSTN_shifts_at(easting, northing):
         (1-t) * (1-u) * lln + t * (1-u) * lrn + (1-t) * u * uln + t * u * urn
     )
 
+
 def _llh_to_cartesian(lat, lon, H, model):
     '''Approximate conversion from spherical to plane coordinates.
 
@@ -580,15 +590,15 @@ def _llh_to_cartesian(lat, lon, H, model):
     was the design point originally chosen by the OSGB.
 
     Numbers from the worked example in the OSGB guide
-    
+
     e2 == 6.6705397616E-03
     nu == 6.3910506260E+06
 
     >>> tuple(round(x,4) for x in _llh_to_cartesian(52 + 39/60 + 27.2531/3600, 1 + 43/60 + 4.5177/3600, 24.700, 'OSGB36'))
     (3874938.8497, 116218.6238, 5047168.2073)
 
-    Note that here we have rounded to 4 places because these are in units of metres 
-    rather than degrees.  
+    Note that here we have rounded to 4 places because these are in units of metres
+    rather than degrees.
 
     '''
     a, _, _, e2 = ELLIPSOID_MODELS[model]
@@ -608,6 +618,7 @@ def _llh_to_cartesian(lat, lon, H, model):
         (nu+H) * cp * sl,
         ((1-e2)*nu+H)*sp
     )
+
 
 def _cartesian_to_llh(x, y, z, model):
     '''Approximate conversion from plane to spherical coordinates.
@@ -638,6 +649,7 @@ def _cartesian_to_llh(x, y, z, model):
         p/math.cos(phi) - nu
     )
 
+
 def _small_Helmert_transform_for_OSGB(direction, xa, ya, za):
     '''Transform 3d planar coordinates to approximate OSGB36 to WGS84.
 
@@ -659,25 +671,33 @@ def _small_Helmert_transform_for_OSGB(direction, xa, ya, za):
     zb = tz - ry*xa + rx*ya + sp*za
     return (xb, yb, zb)
 
+
 def _shift_ll_from_osgb36_to_wgs84(lat, lon):
     '''Approximate conversion of OGSB sperical coordinates to WGS84.
 
     Used as a last resort by grid_to_ll
+
+    >>> _shift_ll_from_osgb36_to_wgs84(52, -2)
+    (52.0004248559296, -2.0014104687899463)
     '''
     (xa, ya, za) = _llh_to_cartesian(lat, lon, 0, 'OSGB36')
     (xb, yb, zb) = _small_Helmert_transform_for_OSGB(-1, xa, ya, za)
     (latx, lonx, _) = _cartesian_to_llh(xb, yb, zb, 'WGS84')
     return (latx, lonx)
 
+
 def _shift_ll_from_wgs84_to_osgb36(lat, lon):
     '''Approximate conversion of WGS84 spherical coordinates to OSGB36.
 
     Used as a last resort by ll_to_grid
+    >>> tuple(round(x, 7) for x in _shift_ll_from_wgs84_to_osgb36(52.0004248559296, -2.0014104687899463))
+    (52.0, -2.0)
     '''
     (xa, ya, za) = _llh_to_cartesian(lat, lon, 0, 'WGS84')
     (xb, yb, zb) = _small_Helmert_transform_for_OSGB(+1, xa, ya, za)
     (latx, lonx, _) = _cartesian_to_llh(xb, yb, zb, 'OSGB36')
     return (latx, lonx)
+
 
 if __name__ == "__main__":
     import doctest
