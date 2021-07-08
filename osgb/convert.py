@@ -149,6 +149,14 @@ def grid_to_ll(easting, northing, model='WGS84'):
     >>> # Keyword arguments for Glen Achcall
     >>> grid_to_ll(easting=217380, northing=896060, model='OSGB36')
     (57.91671633292687, -5.083330213971718)
+
+    outside area
+    >>> grid_to_ll(easting=-100, northing=-100)
+    (49.765845525568885, -7.558439177107591)
+
+    >>> grid_to_ll(easting=1, northing=1)
+    (49.76681682716132, -7.557147009202674)
+
     """
 
     (os_lat, os_lon) = _reverse_project_onto_ellipsoid(easting, northing, 'OSGB36')
@@ -697,8 +705,3 @@ def _shift_ll_from_wgs84_to_osgb36(lat, lon):
     (xb, yb, zb) = _small_Helmert_transform_for_OSGB(+1, xa, ya, za)
     (latx, lonx, _) = _cartesian_to_llh(xb, yb, zb, 'OSGB36')
     return (latx, lonx)
-
-
-if __name__ == "__main__":
-    import doctest
-    doctest.testmod()
