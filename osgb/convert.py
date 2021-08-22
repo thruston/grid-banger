@@ -47,14 +47,14 @@ if sys.version_info > (3, 0):
 else:
     OSTN_EE_SHIFTS = array.array(b'H')
     try:
-        OSTN_EE_SHIFTS.fromstring(pkgutil.get_data("osgb", "ostn_east_shift_82140"))
+        OSTN_EE_SHIFTS.frombytes(pkgutil.get_data("osgb", "ostn_east_shift_82140"))
     except TypeError:
         print("Failed to load OSTN eastings from file", file=sys.stderr)
         raise
 
     OSTN_NN_SHIFTS = array.array(b'H')
     try:
-        OSTN_NN_SHIFTS.fromstring(pkgutil.get_data("osgb", "ostn_north_shift_-84180"))
+        OSTN_NN_SHIFTS.frombytes(pkgutil.get_data("osgb", "ostn_north_shift_-84180"))
     except TypeError:
         print("Failed to load OSTN northings from file", file=sys.stderr)
         raise
