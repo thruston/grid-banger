@@ -83,7 +83,7 @@ if __name__ == "__main__":
     else:
         map_string = '(not covered by any OSGB map)'
 
-    print('WGS84  {:.8g} {:.7g}'.format(lat, lon), end=' ')
+    print('WGS84  {:.8f} {:.7f}'.format(lat, lon), end=' ')
     print('== {:.3f} {:.3f}'.format(e, n), end=' ')
     print('== {} {}'.format(grid, map_string))
 
@@ -99,7 +99,7 @@ if __name__ == "__main__":
     else:
         map_string = '(not covered by any OSGB map)'
 
-    print('OSGB36 {:.8g} {:.7g}'.format(olat, olon), end=' ')
+    print('OSGB36 {:.8f} {:.7f}'.format(olat, olon), end=' ')
     print('== {:.3f} {:.3f}'.format(oe, on), end=' ')
     print('== {} {}'.format(grid, map_string))
 

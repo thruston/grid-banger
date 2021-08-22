@@ -12,7 +12,7 @@ setuptools.setup(
     url='http://thurston.eml.cc',
     packages=['osgb'],
     package_data={'osgb': ['ostn_east_shift_82140', 'ostn_north_shift_-84180', 'gb_coastline.shapes']},
-    scripts=['scripts/bngl', 'scripts/whatmaps.py', 'scripts/plot_maps.py'],
+    scripts=['scripts/bngl.py', 'scripts/whatmaps.py', 'scripts/plot_maps.py'],
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Environment :: Console",
