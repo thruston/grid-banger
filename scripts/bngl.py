@@ -6,6 +6,7 @@ Toby Thurston -- 04 Jul 2021
 """
 # allow free variable names and the occasional trailing whitespace character
 # pylint: disable=C0103, C0303
+from __future__ import print_function, division
 
 import argparse
 import random
