@@ -11,7 +11,9 @@ setuptools.setup(
     author_email='toby@cpan.org',
     url='http://thurston.eml.cc',
     packages=['osgb'],
-    package_data={'osgb': ['ostn_east_shift_82140', 'ostn_north_shift_-84180', 'gb_coastline.shapes']},
+    package_data={'osgb': ['ostn_east_shift_82140', 'ostn_north_shift_-84180', 'gb_coastline.shapes', 
+                           'maps-explorer.txt', 'maps-harvey-mountain.txt', 'maps-harvey-superwalker.txt', 
+                           'maps-landranger.txt', 'maps-one-inch.txt', ]},
     scripts=['scripts/bngl.py', 'scripts/whatmaps.py', 'scripts/plot_maps.py'],
     classifiers=[
         "Development Status :: 5 - Production/Stable",

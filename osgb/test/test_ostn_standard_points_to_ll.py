@@ -12,11 +12,7 @@ import argparse
 import csv
 import math
 
-import pytest
-
 import osgb
-
-# pylint: disable=C0103
 
 test_input = dict()
 expected_output = dict()
@@ -34,14 +30,14 @@ with open('osgb/test/OSTN15_OSGM15_TestOutput_OSGBtoETRS.txt') as test_output_da
             continue
         expected_output[r['PointID']] = (float(r['ETRSEast/Lat']), float(r['ETRSNorth/Long']))
 
-acceptable_error_mm = 0.02
 
 def test_all(chatty=False):
+    acceptable_error_mm = 0.02
     for k in sorted(test_input):
         (lat, lon) = osgb.grid_to_ll(*test_input[k])
         phi = math.radians(lat)
         one_lat_in_mm = 111132954 - 559822 * math.cos(2 * phi) + 1175 * math.cos(4 * phi)
-        one_lon_in_mm = 1000 * (3.141592653589793 / 180) * (6378137 * math.cos(phi)) / math.sqrt(1 - 0.006694380004260827 * math.sin(phi) ** 2)
+        one_lon_in_mm = 111319490.79327355 * math.cos(phi) / math.sqrt(1 - 0.006694380004260827 * math.sin(phi) ** 2)
 
         delta_lat = lat-expected_output[k][0]
         delta_lon = lon-expected_output[k][1]
@@ -54,6 +50,7 @@ def test_all(chatty=False):
 
         assert abs(delta_lat_mm) < acceptable_error_mm
         assert abs(delta_lon_mm) < acceptable_error_mm
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

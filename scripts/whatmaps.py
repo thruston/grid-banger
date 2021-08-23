@@ -45,18 +45,18 @@ if __name__ == "__main__":
 
     maps = list()
     for p in points:
-        maps.extend(osgb.sheet_list(*osgb.ll_to_grid(p.latitude, p.longitude), series=args.series))
+        maps.extend(osgb.sheet_keys(*osgb.ll_to_grid(p.latitude, p.longitude), series=args.series))
 
     c = collections.Counter(maps)
     for map_key in sorted(c):
         out = list()
         if args.name:
             k, sheet = map_key.split(':')
-            out.append('{} {}'.format(osgb.mapping.name_for_map_series[k], sheet))
+            out.append('{} {}'.format(osgb.name_for_map_series[k], sheet))
         else:
             out.append(map_key)
         if args.title:
-            out.append('"' + osgb.mapping.map_locker[map_key]['title'] + '"')
+            out.append('"' + osgb.map_locker[map_key].title + '"')
         if args.coverage:
             out.append("({}%)".format(int(100*c[map_key]/len(points))))
         print(' '.join(out))

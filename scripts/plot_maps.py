@@ -1,41 +1,41 @@
 '''Print a map of the National Grid, optionally with an index of OS maps'''
 from __future__ import print_function, division
 
-# pylint: disable=C0103, C0301, C0330
-
 import argparse
 import math
 import os
 import pkgutil
-import re
 import subprocess
 import sys
 import tempfile
 import textwrap
+
 import osgb
 
-def does_not_overlap_parent(inset_key):
+
+def does_not_overlap_parent(key):
     "See if an inset overlaps the parent sheet"
-    inset = osgb.mapping.map_locker[inset_key]
-    parent = osgb.mapping.map_locker[inset['parent']]
-    return (inset['bbox'][0][0] > parent['bbox'][1][0]
-         or inset['bbox'][1][0] < parent['bbox'][0][0]
-         or inset['bbox'][1][1] < parent['bbox'][0][1]
-         or inset['bbox'][0][1] > parent['bbox'][1][1])
+    inset = osgb.map_locker[key]
+    parent = osgb.map_locker[inset.parent]
+    return (inset.bbox[0][0] > parent.bbox[1][0]
+            or inset.bbox[1][0] < parent.bbox[0][0]
+            or inset.bbox[1][1] < parent.bbox[0][1]
+            or inset.bbox[0][1] > parent.bbox[1][1])
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog='plot_maps',
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        description=textwrap.dedent('''\
-        plot_maps - make a nice index sheet for a map series.
+                                     formatter_class=argparse.RawDescriptionHelpFormatter,
+                                     epilog="Toby Thurston -- August 2021",
+                                     description=textwrap.dedent('''
+    plot_maps - make a nice index sheet for a map series.
 
-        If you have a working TeXLive installation with MetaPost and GhostScript installed, 
-        you can use it to produce PDF index maps of the various map series included.
-        '''),
-        epilog="Toby Thurston -- 15 Nov 2017"
-    )
+    If you have a working TeXLive installation with MetaPost and GhostScript installed,
+    you can use it to produce PDF index maps of the various map series included.'''))
+
     parser.add_argument('--series', type=str, choices='ABCHJ', help='Show map series')
-    parser.add_argument('--paper', type=str.upper, choices=('A0', 'A1', 'A2', 'A3', 'A4'), default='A3', help='Output paper size')
+    parser.add_argument('--paper', type=str.upper, choices=('A0', 'A1', 'A2', 'A3', 'A4'),
+                        default='A3', help='Output paper size')
     parser.add_argument('--pdf', type=str, help="Write to this file")
     parser.add_argument('--towns', action='store_true', help="Show some town names")
     parser.add_argument('--tests', action='store_true', help="Show the OSGB test locations")
@@ -59,30 +59,31 @@ if __name__ == "__main__":
     scale = {'A4': 1680, 'A3': 1189, 'A2': 840, 'A1': 597, 'A0': 420}[args.paper]
 
     # gather all the paths we will need from the map locker polygons
-    path_for = dict() # a list of the actual MP maps
-    sides = list() # a list of keys to path_for
-    insets = list() # another list of (different) keys to path_for
+    path_for = dict()  # a list of the actual MP maps
+    sides = list()  # a list of keys to path_for
+    insets = list()  # another list of (different) keys to path_for
     if args.series:
-        for k in osgb.mapping.map_locker:
+        for k, sheet in osgb.map_locker.items():
             # Skip maps not wanted
             if k[:1] not in args.series:
                 continue
+
             # make the polygon into an MP path
             path_for[k] = '--'.join('({:.1f}, {:.1f})'.format(x[0]/scale, x[1]/scale)
-                                    for x in osgb.mapping.map_locker[k]['polygon'][:-1]) + '--cycle'
+                                    for x in sheet.polygon[:-1]) + '--cycle'
             # append the key to the appropriate list
-            if k == osgb.mapping.map_locker[k]['parent']:
+            if sheet.parent == '':
                 sides.append(k)
             else:
                 insets.append(k)
 
     # MP rgbcolor tuples
     color_for = {
-        'A': '(224/255, 36/255, 114/255)', # Landranger pink
-        'B': '(221/255, 61/255, 31/255)', # Explorer orange
-        'C': '(228/255, 0, 28/255)', # Seventh series red
-        'H': '(128/255, 4/255, 36/255)', # Harvey dark red
-        'J': '(128/255, 4/255, 36/255)', # Harvey dark red
+        'A': '(224/255, 36/255, 114/255)',  # Landranger pink
+        'B': '(221/255, 61/255, 31/255)',  # Explorer orange
+        'C': '(228/255, 0, 28/255)',  # Seventh series red
+        'H': '(128/255, 4/255, 36/255)',  # Harvey dark red
+        'J': '(128/255, 4/255, 36/255)',  # Harvey dark red
     }
 
     # open a tempory file for MP
@@ -103,14 +104,18 @@ if __name__ == "__main__":
                 (ee, nn) = osgb.ll_to_grid(*osgb.grid_to_ll(e, n))
                 h = math.sqrt((e-ee)**2+(n-nn)**2)
                 if h > 0:
-                    print('drawdot ({:.1f}, {:.1f}) withpen pencircle scaled 4 withcolor {:.2f}[white, red];'.format(e/scale, n/scale, h*100), file=plotter)
+                    print('drawdot ({:.1f}, {:.1f})'.format(e/scale, n/scale), file=plotter)
+                    print(' withpen pencircle scaled 4 withcolor {:.2f}[white, red];'.format(h*100), file=plotter)
 
-        print('label.rt("Round trip error (mm)" infont defaultfont scaled 0.6, ({:.1f}, {:.1f}));'.format(-176500/scale, 1255000/scale), file=plotter)
+        print('label.rt("Round trip error (mm)" infont defaultfont scaled 0.6,', file=plotter)
+        print('({:.1f}, {:.1f}));'.format(-176500/scale, 1255000/scale), file=plotter)
         for i in range(6):
             e = -120000 - i * 10000
             n = 1245000
-            print('drawdot ({:.1f}, {:.1f}) withpen pencircle scaled 4 withcolor {:.2f}[white, red];'.format(e/scale, n/scale, i/5), file=plotter)
-            print('label.bot("{}" infont defaultfont scaled 0.6, ({:.1f}, {:.1f}));'.format(2*i, e/scale, n/scale-2), file=plotter)
+            print('drawdot ({:.1f}, {:.1f})'.format(e/scale, n/scale), file=plotter)
+            print(' withpen pencircle scaled 4 withcolor {:.2f}[white, red];'.format(i/5), file=plotter)
+            print('label.bot("{}" infont defaultfont scaled 0.6,'.format(2*i), file=plotter)
+            print('({:.1f}, {:.1f}));'.format(e/scale, n/scale-2), file=plotter)
 
     if not args.nograt:
         print("drawoptions(withpen pencircle scaled 0.4);", file=plotter)
@@ -151,11 +156,11 @@ if __name__ == "__main__":
 
                 if i < 7 and j < 12:
                     sq = osgb.format_grid(e, n, form='SS')
-                    mid = '({:.1f}, {:.1f})'.format((e+50000)/scale, (n+50000)/scale)
-                    print('label("{}" infont "phvr8r" scaled {}, {}) withcolor .8 white;'.format(sq, 3600/scale, mid), file=plotter)
+                    print('label("{}" infont "phvr8r" scaled {},'.format(sq, 3600/scale), file=plotter)
+                    print('({:.1f}, {:.1f})) withcolor 3/4;'.format((e+50000)/scale, (n+50000)/scale), file=plotter)
         # add HP as well
-        mid = '({:.1f}, {:.1f})'.format(450000/scale, 1250000/scale)
-        print('label("{}" infont "phvr8r" scaled {}, {}) withcolor .8 white;'.format("HP", 3600/scale, mid), file=plotter)
+        print('label("HP" infont "phvr8r" scaled {},'.format(3600/scale), file=plotter)
+        print('({:.1f}, {:.1f})) withcolor 3/4;'.format((450000)/scale, (1250000)/scale), file=plotter)
 
     if not args.nocoast:
         coast_shapes = pkgutil.get_data('osgb', 'gb_coastline.shapes')
@@ -253,9 +258,10 @@ if __name__ == "__main__":
         print("drawoptions(withcolor .5[red, white]);", file=plotter)
         for t in points:
             e, n, name = points[t]
-            print("draw unitsquare shifted -(1/2, 1/2) rotated 45 scaled 3 shifted ({:.1f}, {:.1f});".format(e/scale, n/scale), file=plotter)
+            print("draw unitsquare shifted -(1/2, 1/2) rotated 45 scaled 3", file=plotter)
+            print("shifted ({:.1f}, {:.1f});".format(e/scale, n/scale), file=plotter)
 
-    if args.series and sides: # sides will be empty if none of the maps matched series_wanted
+    if args.series and sides:  # sides will be empty if none of the maps matched series_wanted
 
         print("drawoptions(withpen pencircle scaled 0.2);defaultscale:={:.2f};".format(666/scale), file=plotter)
 
@@ -264,37 +270,33 @@ if __name__ == "__main__":
             map_color = color_for[series] if series in color_for else 'black'
             print("draw {} withcolor {};".format(path_for[k], map_color), file=plotter)
 
-            sheet = osgb.mapping.map_locker[k]
-            label = sheet['number']
-            x = (sheet['bbox'][0][0]+sheet['bbox'][1][0])/2/scale
-            y = (sheet['bbox'][0][1]+sheet['bbox'][1][1])/2/scale
+            sheet = osgb.map_locker[k]
+            x = (sheet.bbox[0][0] + sheet.bbox[1][0]) / 2 / scale
+            y = (sheet.bbox[0][1] + sheet.bbox[1][1]) / 2 / scale
 
-            m = re.match(r'^(\d+)/(OL\d+)$', label)
-            if m:
-                print('label("{}", ({}, {})) withcolor .76[white, {}];'.format(m.group(1), x, y+3, map_color), file=plotter)
-                print('label("{}", ({}, {})) withcolor .76[white, {}];'.format(m.group(2), x, y-3, '(.5, .5, 1)'), file=plotter)
+            if sheet.number.startswith('OL'):
+                map_color = '(.5, .5, 1)'
+                y += 3 
 
-            else:
-                if label.startswith('OL'):
-                    map_color = '(.5, .5, 1)'
-                print('label("{}", ({}, {})) withcolor .76[white, {}];'.format(label, x, y, map_color), file=plotter)
+            print('label("{}", ({}, {})) withcolor .76[white, {}];'.format(sheet.number, x, y, map_color), file=plotter)
 
         print('path p, q;', file=plotter)
         for k in insets:
             series = k[:1]
             map_color = color_for[series] if series in color_for else 'black'
             print("p:={};".format(path_for[k]), file=plotter)
-            parent_key = osgb.mapping.map_locker[k]['parent']
+            parent_key = osgb.map_locker[k].parent
             if does_not_overlap_parent(k):
                 print('q:={};'.format(path_for[parent_key]), file=plotter)
-                print("draw center p -- center q cutbefore p cutafter q dashed evenly scaled 1/3 withcolor{};".format(map_color), file=plotter)
+                print("draw center p -- center q cutbefore p cutafter q", file=plotter)
+                print("dashed evenly scaled 1/3 withcolor {};".format(map_color), file=plotter)
             print("draw p withcolor {};".format(map_color), file=plotter)
 
         y = 1300000/scale
         for s in args.series:
             color = color_for[s] if s in color_for else 'black'
             title = 'label.rt("{} sheet index" infont defaultfont scaled {:.1f}, (0, {:.1f})) withcolor {};'.format(
-                    osgb.mapping.name_for_map_series[s], 2000/scale, y, color)
+                    osgb.name_for_map_series[s], 2000/scale, y, color)
             print(title, file=plotter)
             y -= 24
 
@@ -303,11 +305,13 @@ if __name__ == "__main__":
             print("defaultscale:={:.1f};".format(2000/scale), file=plotter)
             x = 510000/scale
             y = 515000/scale
-            print('''fill unitsquare xscaled {:.1f} yscaled {:.1f}
-                  shifted ({:.1f}, {:.1f}) withcolor background;'''.format(200000/scale, (12000*len(sides)+4000)/scale, x-5, y-3), file=plotter)
+            print('fill unitsquare xscaled {:.1f}'.format(200000/scale), file=plotter)
+            print('yscaled {:.1f}'.format((12000*len(sides)+4000)/scale), file=plotter)
+            print('shifted ({:.1f}, {:.1f}) withcolor background;'.format(x-5, y-3), file=plotter)
             for k in sorted(sides, reverse=True):
-                sheet = osgb.mapping.map_locker[k]
-                print('draw "{} {}" infont defaultfont shifted ({:.1f}, {:.1f});'.format(sheet['number'], sheet['title'], x, y), file=plotter)
+                sheet = osgb.map_locker[k]
+                print('draw "{} {}"'.format(sheet['number'], sheet['title']), file=plotter)
+                print('infont defaultfont shifted ({:.1f}, {:.1f});'.format(x, y), file=plotter)
                 y += 12000/scale
 
     # Add a margin

@@ -11,9 +11,6 @@ from __future__ import print_function, division
 import argparse
 import csv
 import osgb
-import pytest
-
-# pylint: disable=C0103
 
 test_input = dict()
 expected_output = dict()
@@ -27,6 +24,7 @@ with open('osgb/test/OSTN15_OSGM15_TestOutput_ETRStoOSGB.txt') as test_output_fi
     for r in reader:
         expected_output[r['PointID']] = (float(r['OSGBEast']), float(r['OSGBNorth']))
 
+
 def test_all(chatty=False):
     for k in sorted(test_input):
         gr = osgb.ll_to_grid(*test_input[k])
@@ -35,7 +33,7 @@ def test_all(chatty=False):
             print("Got:", gr)
             print()
         assert gr == expected_output[k]
-        
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -43,5 +41,3 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     test_all(args.verbose)
-
-
