@@ -56,7 +56,7 @@ series letter + ``:`` + the sheet number.  The values are named tuples called
 - `title` a version of the title printed on the front of the map
 - `polygon` a list of (easting, northing) pairs that define the boundary of the map.  Note that the last pair should always equal the first pair.
 
-Example:
+Example::
     
     for m in osgb.map_locker.values():
         print(m.number, m.title)
