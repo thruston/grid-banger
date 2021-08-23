@@ -65,7 +65,7 @@ def _load_maps(series, filename):
     maps = dict()
     for line in pkgutil.get_data('osgb', filename).decode('utf-8').splitlines():
         sheet, inset, bbox, area, title, polygon = (x.strip() for x in line.split('  ') if x)
-        key = f'{series}:{sheet}'
+        key = '{}:{}'.format(series, sheet)
         if inset == '.':
             parent = ''
         else:
