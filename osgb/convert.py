@@ -362,8 +362,10 @@ def _project_onto_grid(lat, lon, model):
 
     This is the core bit of arithmetic, following the OSGB reference implementation.
     The strange variable names (I, II, III, etc) follow those used in the OSGB
-    notes.  We are essentially using a Taylor polynomial expansion, and the
-    accurancy of this projection is limited by the number of terms included.
+    notes, except that M is used instead of I to keep flake8 happy.
+
+    We are essentially using a Taylor polynomial expansion, and the
+    accuracy of this projection is limited by the number of terms included.
     The design point appears to be approximately 1mm of error, but this is
     never precisely defined in the OSGB notes.
 
@@ -381,7 +383,7 @@ def _project_onto_grid(lat, lon, model):
 
     a, _, _, e2 = ELLIPSOID_MODELS[model]
 
-    I = _compute_M(phi, model)
+    M = _compute_M(phi, model)
 
     nu = CONVERGENCE_FACTOR * a / math.sqrt(1 - e2 * sp * sp)
     etasq = (1 - e2 * sp * sp) / (1 - e2) - 1
@@ -395,7 +397,7 @@ def _project_onto_grid(lat, lon, model):
     VI = nu/120 * cp**5 * (5 + (-18 + tp * tp) * tp * tp + 14 * etasq - 58 * tp * tp * etasq)
 
     dl = lon / 57.29577951308232087679815481410517 - ORIGIN_LAMBDA
-    north = ORIGIN_NORTHING + I + (II + (III + IIIA * dl * dl) * dl * dl) * dl * dl
+    north = ORIGIN_NORTHING + M + (II + (III + IIIA * dl * dl) * dl * dl) * dl * dl
     east = ORIGIN_EASTING + (IV + (V + VI * dl * dl) * dl * dl) * dl
 
     # return them with easting first
@@ -602,7 +604,8 @@ def _llh_to_cartesian(lat, lon, H, model):
     e2 == 6.6705397616E-03
     nu == 6.3910506260E+06
 
-    >>> tuple(round(x,4) for x in _llh_to_cartesian(52 + 39/60 + 27.2531/3600, 1 + 43/60 + 4.5177/3600, 24.700, 'OSGB36'))
+    >>> t = _llh_to_cartesian(52 + 39/60 + 27.2531/3600, 1 + 43/60 + 4.5177/3600, 24.700, 'OSGB36')
+    >>> tuple(round(x, 4) for x in t)
     (3874938.8497, 116218.6238, 5047168.2073)
 
     Note that here we have rounded to 4 places because these are in units of metres
