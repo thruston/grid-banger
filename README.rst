@@ -162,25 +162,31 @@ contents
 
     LICENCE.txt
     README.rst
+    requirements.txt
     setup.py
+    docs/
     osgb/convert.py
     osgb/gridder.py
     osgb/legacy_interface.py
+    osgb/maps-explorer.txt
+    osgb/maps-harvey-mountain.txt
+    osgb/maps-harvey-superwalker.txt
+    osgb/maps-landranger.txt
+    osgb/maps-one-inch.txt
+    osgb/gb_coastline.shapes
     osgb/ostn_east_shift_82140
     osgb/ostn_north_shift_-84180
-    osgb/gb_coastline.shapes
+    osgb/test/OSTN15_OSGM15_TestFiles_README.txt
+    osgb/test/OSTN15_OSGM15_TestInput_ETRStoOSGB.txt
+    osgb/test/OSTN15_OSGM15_TestInput_OSGBtoETRS.txt
+    osgb/test/OSTN15_OSGM15_TestOutput_ETRStoOSGB.txt
+    osgb/test/OSTN15_OSGM15_TestOutput_OSGBtoETRS.txt
+    osgb/test/bench_mark.py
+    osgb/test/test_ostn_standard_points_to_grid.py
+    osgb/test/test_ostn_standard_points_to_ll.py
+    osgb/test/test_some_more_places.py
     scripts/bngl.py
-    scripts/make_map_locker
     scripts/plot_maps.py
     scripts/whatmaps.py
-    test/bench_mark.py
-    test/test_ostn_standard_points_to_grid.py
-    test/test_ostn_standard_points_to_ll.py
-    test/test_some_more_places.py
-    test/OSTN15_OSGM15_TestFiles_README.txt
-    test/OSTN15_OSGM15_TestInput_ETRStoOSGB.txt
-    test/OSTN15_OSGM15_TestInput_OSGBtoETRS.txt
-    test/OSTN15_OSGM15_TestOutput_ETRStoOSGB.txt
-    test/OSTN15_OSGM15_TestOutput_OSGBtoETRS.txt
     Index_for_map_series_A.pdf
     Index_for_map_series_B.pdf
