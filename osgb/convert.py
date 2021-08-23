@@ -1,7 +1,8 @@
-# pylint: disable=C0103, C0301, W0231
-"""Conversion between latitude/longitude coordinates and OSGB grid references.
+"""Conversion between latitude/longitude coordinates and OSGB grid
+references.
 
-This module provides the core routines that implement the OS conversion formulae.
+This module provides the core routines that implement the OS conversion
+formulae.
 
 """
 from __future__ import print_function, division, unicode_literals
@@ -87,25 +88,30 @@ def grid_to_ll(easting, northing, model='WGS84'):
     Convert OSGB (easting, northing) to latitude and longitude.
 
     Input
-        an (easting, northing) pair in metres from the false point of origin of the grid.
+        an (easting, northing) pair in metres from the false point of
+        origin of the grid.
 
-        Note that if you are starting with a tradtional grid reference string like ``TQ183506``,
-        you need to parse it into an (easting, northing) pair using the :py:func:`parse_grid`
-        function from :py:mod:`osgb.gridder` before you can pass it to this function.
+        Note that if you are starting with a tradtional grid reference
+        string like ``TQ183506``, you need to parse it into an (easting,
+        northing) pair using the :py:func:`parse_grid` function from
+        :py:mod:`osgb.gridder` before you can pass it to this function.
 
     Output
-        a (latitude, longitude) pair in degrees; postive East/North, negative West/South
+        a (latitude, longitude) pair in degrees; postive East/North,
+        negative West/South
 
-    An optional argument 'model' defines the graticule model to use.  The
-    default is 'WGS84', the standard model used for the GPS network and for
-    references given on Google Earth or Wikipedia, etc.  The only other valid
-    value is 'OSGB36' which is the traditional model used in the UK before GPS.
-    Latitude and longitude coordinates marked around the edges of OS maps
-    published before 2015 are given in the OSGB36 model.
+    An optional argument 'model' defines the graticule model to use.
+    The default is 'WGS84', the standard model used for the GPS network
+    and for references given on Google Earth or Wikipedia, etc.  The
+    only other valid value is 'OSGB36' which is the traditional model
+    used in the UK before GPS.  Latitude and longitude coordinates
+    marked around the edges of OS maps published before 2015 are given
+    in the OSGB36 model.
 
-    **Accuracy**: Grid references rounded to whole metres will give lat/lon that
-    are accurate to about 5 decimal places.  In the UK, 0.00001 of a degree of
-    latitude is about 70cm, 0.00001 of a degree of longitude is about 1m.
+    **Accuracy**: Grid references rounded to whole metres will give
+    lat/lon that are accurate to about 5 decimal places.  In the UK,
+    0.00001 of a degree of latitude is about 70cm, 0.00001 of a degree
+    of longitude is about 1m.
 
     For example:
 
@@ -119,7 +125,8 @@ def grid_to_ll(easting, northing, model='WGS84'):
     >>> (round(lat, 5), round(lon, 5))
     (50.5, -3.83333)
 
-    But Grid references in millimetres will give results accurate to 8 decimal places.
+    But Grid references in millimetres will give results accurate to 8
+    decimal places.
 
     >>> # Cranbourne Chase, on the central meridian
     >>> lat, lon = grid_to_ll(400000, 122350.044, model='OSGB36')
@@ -131,10 +138,11 @@ def grid_to_ll(easting, northing, model='WGS84'):
     >>> (round(lat, 8), round(lon, 8))
     (52.6575703, 1.71792158)
 
-    The routines will produce lots more decimal places, so that you can choose
-    what rounding you want, although they aren't really meaningful beyond nine
-    places, since the conversion routines supplied by the OS are only designed
-    to be accurate to about 1mm (8 places).
+    The routines will produce lots more decimal places, so that you can
+    choose what rounding you want, although they aren't really
+    meaningful beyond nine places, since the conversion routines
+    supplied by the OS are only designed to be accurate to about 1mm (8
+    places).
 
     >>> # Hoy (Orkney)
     >>> grid_to_ll(323223, 1004000, model='OSGB36')
@@ -150,7 +158,7 @@ def grid_to_ll(easting, northing, model='WGS84'):
     >>> grid_to_ll(easting=217380, northing=896060, model='OSGB36')
     (57.91671633292687, -5.083330213971718)
 
-    outside area
+    Check that outside area works
     >>> tuple(round(x, 8) for x in grid_to_ll(easting=-100, northing=-100))
     (49.76584553, -7.55843918)
 
@@ -202,16 +210,17 @@ def ll_to_grid(lat, lon, model='WGS84', rounding=-1):
         a tuple containing (easting, northing) in metres from the grid origin.
 
     Input
-        The arguments should be supplied as real numbers representing decimal degrees, like this:
+         The arguments should be supplied as real numbers representing
+         decimal degrees, like this:
 
         >>> ll_to_grid(51.5, -2.1)
         (393154.813, 177900.607)
 
-        Following the normal convention, positive arguments mean North or
-        East, negative South or West.
+        Following the normal convention, positive arguments mean North
+        or East, negative South or West.
 
-        If you have data with degrees, minutes and seconds, you can convert them
-        to decimals like this:
+        If you have data with degrees, minutes and seconds, you can
+        convert them to decimals like this:
 
         >>> ll_to_grid(51+25/60, 0-5/60-2/3600)
         (533338.156, 170369.238)
@@ -219,17 +228,18 @@ def ll_to_grid(lat, lon, model='WGS84', rounding=-1):
         >>> ll_to_grid(52 + 39/60 + 27.2531/3600, 1 + 43/60 + 4.5177/3600, model='OSGB36')
         (651409.903, 313177.27)
 
-        But if you are still using python2 then be sure to ``import division`` so that
-        you get the correct semantics for division when both numerator and denominator
-        are integers.
+        But if you are still using python2 then be sure to ``import
+        division`` so that you get the correct semantics for division
+        when both numerator and denominator are integers.
 
-    If you have trouble remembering the order of the arguments, or the returned
-    values, note that latitude comes before longitude in the alphabet too, as
-    easting comes before northing.  However since reasonable latitudes for the
-    OSGB are in the range 49 to 61, and reasonable longitudes in the range -9
-    to +2, the ``ll_to_grid`` function accepts argument in either order.  If
-    your longitude is larger than your latitude, then the values of the
-    arguments will be silently swapped:
+    If you have trouble remembering the order of the arguments, or the
+    returned values, note that latitude comes before longitude in the
+    alphabet too, as easting comes before northing.  However since
+    reasonable latitudes for the OSGB are in the range 49 to 61, and
+    reasonable longitudes in the range -9 to +2, the ``ll_to_grid``
+    function accepts argument in either order.  If your longitude is
+    larger than your latitude, then the values of the arguments will be
+    silently swapped:
 
     >>> ll_to_grid(-2.1, 51.5)
     (393154.813, 177900.607)
@@ -239,19 +249,20 @@ def ll_to_grid(lat, lon, model='WGS84', rounding=-1):
     >>> ll_to_grid(lon=-2.1, lat=51.5)
     (393154.813, 177900.607)
 
-    The easting and northing will be returned as the distance in metres from
-    the 'false point of origin' of the British Grid (which is a point some way
-    to the south-west of the Scilly Isles).  If you want the result presented
-    in a more traditional grid reference format you should pass the results to
-    :py:func:`format_grid` from :py:mod:`osgb.gridder`.
+    The easting and northing will be returned as the distance in metres
+    from the 'false point of origin' of the British Grid (which is a
+    point some way to the south-west of the Scilly Isles).  If you want
+    the result presented in a more traditional grid reference format you
+    should pass the results to :py:func:`format_grid` from
+    :py:mod:`osgb.gridder`.
 
     If the coordinates you supply are in the area covered by the OSTN
-    transformation data, then the results will be rounded to 3 decimal places,
-    which corresponds to the nearest millimetre.  If they are outside the
-    coverage then the conversion is automagically done using a Helmert
-    transformation instead of the OSTN data.  The results will be rounded to
-    the nearest metre in this case, although you probably should not rely on
-    the results being more accurate than about 5m.
+    transformation data, then the results will be rounded to 3 decimal
+    places, which corresponds to the nearest millimetre.  If they are
+    outside the coverage then the conversion is automagically done using
+    a Helmert transformation instead of the OSTN data.  The results will
+    be rounded to the nearest metre in this case, although you probably
+    should not rely on the results being more accurate than about 5m.
 
     >>> # Somewhere in London
     >>> ll_to_grid(51.3, 0)
@@ -267,29 +278,31 @@ def ll_to_grid(lat, lon, model='WGS84', rounding=-1):
     >>> ll_to_grid(56.75, -7)
     (94469.613, 773209.471)
 
-    The numbers returned may be negative if your latitude and longitude are
-    far enough south and west, but beware that the transformation is less
-    and less accurate or useful the further you get from the British Isles.
+    The numbers returned may be negative if your latitude and longitude
+    are far enough south and west, but beware that the transformation is
+    less and less accurate or useful the further you get from the
+    British Isles.
 
     >>> ll_to_grid(51.3, -10)
     (-157250.0, 186110.0)
 
-    ``ll_to_grid`` also takes an optional argument that sets the ellipsoid
-    model to use.  This defaults to ``WGS84``, the name of the normal model
-    for working with normal GPS coordinates, but if you want to work with
-    the traditional latitude and longitude values printed on OS maps then
-    you should add an optional model argument
+    ``ll_to_grid`` also takes an optional argument that sets the
+    ellipsoid model to use.  This defaults to ``WGS84``, the name of the
+    normal model for working with normal GPS coordinates, but if you
+    want to work with the traditional latitude and longitude values
+    printed on OS maps then you should add an optional model argument
 
     >>> ll_to_grid(49, -2, model='OSGB36')
     (400000.0, -100000.0)
 
 
     Incidentally, the grid coordinates returned by this call are the
-    coordinates of the 'true point of origin' of the British grid.  You should
-    get back an easting of 400000.0 for any point with longitude 2W since this is
-    the central meridian used for the OSGB projection.  However you will get a
-    slightly different value unless you specify ``model='OSGB36'``
-    since the WGS84 meridians are not quite the same as OSGB36.
+    coordinates of the 'true point of origin' of the British grid.  You
+    should get back an easting of 400000.0 for any point with longitude
+    2W since this is the central meridian used for the OSGB projection.
+    However you will get a slightly different value unless you specify
+    ``model='OSGB36'`` since the WGS84 meridians are not quite the same
+    as OSGB36.
 
         >>> ll_to_grid(52, -2, model='OSGB36')
         (400000.0, 233553.731)
@@ -297,16 +310,18 @@ def ll_to_grid(lat, lon, model='WGS84', rounding=-1):
         >>> ll_to_grid(52, -2, model='WGS84')
         (400096.274, 233505.403)
 
-    If the model is not ``OSGB36`` or ``WGS84`` you will get an UndefinedModelError exception:
+    If the model is not ``OSGB36`` or ``WGS84`` you will get an
+    UndefinedModelError exception:
 
         >>> ll_to_grid(52, -2, model='EDM50') # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
             ...
         UndefinedModelError: EDM50
 
-    You can also control the rounding directly if you need to, but be aware that
-    asking for more decimal places does not make the conversion any more accurate;
-    the formulae used are only designed to be accurate to 1mm.
+    You can also control the rounding directly if you need to, but be
+    aware that asking for more decimal places does not make the
+    conversion any more accurate; the formulae used are only designed to
+    be accurate to 1mm.
 
         >>> ll_to_grid(52, -2, rounding=4)
         (400096.2738, 233505.4033)
@@ -321,21 +336,19 @@ def ll_to_grid(lat, lon, model='WGS84', rounding=-1):
 
     easting, northing = _project_onto_grid(lat, lon, model)
 
+    default_rounding = 3
     if model == 'WGS84':
         shifts = _find_OSTN_shifts_at(easting, northing)
         if shifts is not None:
             easting += shifts[0]
             northing += shifts[1]
-            if rounding < 0:
-                rounding = 3
         else:
             (osgb_lat, osgb_lon) = _shift_ll_from_wgs84_to_osgb36(lat, lon)
             (easting, northing) = _project_onto_grid(osgb_lat, osgb_lon, 'OSGB36')
-            if rounding < 0:
-                rounding = 0
+            default_rounding = 0
 
     if rounding < 0:
-        rounding = 3
+        rounding = default_rounding
 
     return (round(easting, rounding), round(northing, rounding))
 
@@ -360,16 +373,18 @@ def _compute_M(phi, model):
 def _project_onto_grid(lat, lon, model):
     '''Project spherical coordinates (lat, lon) onto a flat grid.
 
-    This is the core bit of arithmetic, following the OSGB reference implementation.
-    The strange variable names (I, II, III, etc) follow those used in the OSGB
-    notes, except that M is used instead of I to keep flake8 happy.
+    This is the core bit of arithmetic, following the OSGB reference
+    implementation.  The strange variable names (I, II, III, etc) follow
+    those used in the OSGB notes, except that M is used instead of I to
+    keep flake8 happy.
 
     We are essentially using a Taylor polynomial expansion, and the
-    accuracy of this projection is limited by the number of terms included.
-    The design point appears to be approximately 1mm of error, but this is
-    never precisely defined in the OSGB notes.
+    accuracy of this projection is limited by the number of terms
+    included.  The design point appears to be approximately 1mm of
+    error, but this is never precisely defined in the OSGB notes.
 
-    This routine is not meant to be called by the user.  Use ll_to_grid() instead.
+    This routine is not meant to be called by the user.  Use
+    ll_to_grid() instead.
 
     >>> _project_onto_grid(52, -2, 'OSGB36')
     (400000.0, 233553.73133031745)
@@ -407,11 +422,11 @@ def _project_onto_grid(lat, lon, model):
 def _reverse_project_onto_ellipsoid(easting, northing, model):
     '''Un-project from the grid plane back on to the globe.
 
-    This is the core arithmetic for the reverse projection.  Don't
-    use this directly.  Use grid_to_ll instead.
+    This is the core arithmetic for the reverse projection.  Don't use
+    this directly.  Use grid_to_ll instead.
 
-    The strange variable names follow (roughly) the OSGB formulae.
-    The accuracy is limited by the number of terms in the final expansions,
+    The strange variable names follow (roughly) the OSGB formulae.  The
+    accuracy is limited by the number of terms in the final expansions,
     and the speed by the fact that this has to be an iterative process.
 
     >>> _reverse_project_onto_ellipsoid(400000.0, 233553.731330343, 'OSGB36')
@@ -586,7 +601,8 @@ def _find_OSTN_shifts_at(easting, northing):
 def _llh_to_cartesian(lat, lon, H, model):
     '''Approximate conversion from spherical to plane coordinates.
 
-    Used as part of the Helmert transformation used outside the OSTN02 area.
+    Used as part of the Helmert transformation used outside the OSTN02
+    area.
 
     >>> _llh_to_cartesian(53, -3, 10, 'OSGB36')
     (3841039.2016489906, -201300.3346975291, 5070178.453880734)
@@ -595,9 +611,9 @@ def _llh_to_cartesian(lat, lon, H, model):
     >>> tuple(round(x, 8) for x in _cartesian_to_llh(x, y, z, 'WGS84'))
     (52.0, 1.0, 30.0)
 
-    Note that you dont get more that 8 places of precision here.  Hence the
-    `round(x, 8)` in the test. But that gives you precision to within 1mm which
-    was the design point originally chosen by the OSGB.
+    Note that you dont get more that 8 places of precision here.  Hence
+    the `round(x, 8)` in the test. But that gives you precision to
+    within 1mm which was the design point originally chosen by the OSGB.
 
     Numbers from the worked example in the OSGB guide
 
@@ -608,8 +624,8 @@ def _llh_to_cartesian(lat, lon, H, model):
     >>> tuple(round(x, 4) for x in t)
     (3874938.8497, 116218.6238, 5047168.2073)
 
-    Note that here we have rounded to 4 places because these are in units of metres
-    rather than degrees.
+    Note that here we have rounded to 4 places because these are in
+    units of metres rather than degrees.
 
     '''
     a, _, _, e2 = ELLIPSOID_MODELS[model]
@@ -634,7 +650,8 @@ def _llh_to_cartesian(lat, lon, H, model):
 def _cartesian_to_llh(x, y, z, model):
     '''Approximate conversion from plane to spherical coordinates.
 
-    Used as part of the Helmert transformation used outside the OSTN02 area.
+    Used as part of the Helmert transformation used outside the OSTN02
+    area.
 
     >>> _cartesian_to_llh(3841039.2016489909, -201300.3346975291, 5070178.453880735, 'OSGB36')
     (53.0, -3.0, 10.0)

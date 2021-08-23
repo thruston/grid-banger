@@ -30,9 +30,10 @@ The first has just five entries, as follows::
         'J': 'Harvey Superwalker',
     }
 
-The ``map_locker`` is rather larger; it has an entry for each sheet (and sub-sheet)
-in the five series.  The keys are the map labels consisting of the series letter + ``:`` + the sheet number.
-The values are named tuples called "Sheet" with data for the map.  Here is an example::
+The ``map_locker`` is rather larger; it has an entry for each sheet (and
+sub-sheet) in the five series.  The keys are the map labels consisting of the
+series letter + ``:`` + the sheet number.  The values are named tuples called
+"Sheet" with data for the map.  Here is an example::
 
     {
         "A:4" : Sheet(
@@ -40,7 +41,7 @@ The values are named tuples called "Sheet" with data for the map.  Here is an ex
             area = 1600,
             series = 'A',
             number = '4',
-            parent = 'A:4',
+            parent = '',
             title = 'Shetland – South Mainland',
             polygon = [[420000,1107000],[460000,1107000],[460000,1147000],[420000,1147000],[420000,1107000]]
         ),
@@ -50,7 +51,8 @@ The values are named tuples called "Sheet" with data for the map.  Here is an ex
 - `area` is a string giving the area of the sheet in square km.
 - `series` is one of the keys from :py:data:`osgb.mapping.name_for_map_series`
 - `number` is a string giving the sheet number/label
-- `parent` is a the key of the parent sheet.  This is only relevant for insets and subsheets.
+- `parent` is a the key of the parent sheet.  This is only relevant for insets and subsheets. 
+  For regular sheets, the parent is set to the empty string.
 - `title` a version of the title printed on the front of the map
 - `polygon` a list of (easting, northing) pairs that define the boundary of the map.  Note that the last pair should always equal the first pair.
 

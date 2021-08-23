@@ -1,12 +1,12 @@
 osgb
 ====
 
-.. image:: https://travis-ci.org/thruston/grid-banger.svg?branch=master
-    :target: https://travis-ci.org/thruston/grid-banger
+.. image:: https://github.com/thruston/grid-banger/actions/workflows/python-app.yml/badge.svg
+    :target: https://github.com/thruston/grid-banger/actions/workflows/python-app.yml
 
 Python routines for working with grid references as defined by the Ordnance Survey of Great Britain (OSGB).
 
-Toby Thurston -- July 2021
+Toby Thurston -- August 2021
 
 The functions in this module convert from OSGB grid references to and from GPS
 Latitude and Longitude, using formulae, and the OSTN15 data set, supplied by
@@ -23,10 +23,11 @@ called OSTN15. This dataset is freely available for public use, but
 remains (c) Crown copyright, Ordnance Survey and the Ministry of Defence
 (MOD) 2016. All rights reserved.
 
-The modules are designed to work with Python 2.7 or better and with Python 3.5
-or better. With Python 2.7, they are very slightly faster than with Python 3.6, but
-the functions are, and the results should be, identical.  If you are still using Python 2,
-then use ``python2`` (or whatever you call it) instead of ``python3`` below.
+The modules are designed to work with Python 2.7 and with Python 3.5 or better.
+When I last checked they were very slightly faster with Python 2.7 than with
+Python 3.6, but the functions are, and the results should be, identical.  If
+you are still using Python 2, then use ``python2`` (or whatever you call it)
+instead of ``python3`` below.
 
 install
 -------
@@ -34,6 +35,10 @@ install
 ::
 
     python3 setup.py install
+
+or more likely
+
+    pip3 install osgb
 
 usage
 -----
@@ -124,22 +129,24 @@ test
 
 You can run ``python -m doctest`` against the main modules.
 
-You can also run the ``test/test_ostn_standard_points....`` routines to check that there are no errors
+You can also run the ``osgb/test/test_ostn_standard_points....`` routines to check that there are no errors
 converting the forty standard points given by the OSGB.
 
 ::
 
     python3 -m doctest osgb/convert.py
     python3 -m doctest osgb/gridder.py
-    python3 test/test_ostn_standard_points_to_grid.py
-    python3 test/test_ostn_standard_points_to_ll.py
-    python3 test/test_some_more_places.py
+    python3 osgb/test/test_ostn_standard_points_to_grid.py
+    python3 osgb/test/test_ostn_standard_points_to_ll.py
+    python3 osgb/test/test_some_more_places.py
 
 or, if you have pytest installed, you can do that in one go with
 
 ::
 
     python3 -m pytest --doctest-modules
+
+These tests are automatically run on Github against the currently supported range of Python versions.
 
 You can also run ``test/bench_mark.py`` to see how fast you can go on your system.
 
