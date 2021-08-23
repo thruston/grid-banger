@@ -151,11 +151,11 @@ def grid_to_ll(easting, northing, model='WGS84'):
     (57.91671633292687, -5.083330213971718)
 
     outside area
-    >>> grid_to_ll(easting=-100, northing=-100)
-    (49.765845525568885, -7.558439177107591)
+    >>> tuple(round(x, 8) for x in grid_to_ll(easting=-100, northing=-100))
+    (49.76584553, -7.55843918)
 
-    >>> grid_to_ll(easting=1, northing=1)
-    (49.76681682716132, -7.557147009202674)
+    >>> tuple(round(x, 8) for x in grid_to_ll(easting=1, northing=1))
+    (49.76681683, -7.55714701)
 
     """
 
