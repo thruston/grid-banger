@@ -23,7 +23,7 @@ called OSTN15. This dataset is freely available for public use, but
 remains (c) Crown copyright, Ordnance Survey and the Ministry of Defence
 (MOD) 2016. All rights reserved.
 
-The modules are designed to work with Python 2.7 or better and with Python 3.4
+The modules are designed to work with Python 2.7 or better and with Python 3.5
 or better. With Python 2.7, they are very slightly faster than with Python 3.6, but
 the functions are, and the results should be, identical.  If you are still using Python 2,
 then use ``python2`` (or whatever you call it) instead of ``python3`` below.
