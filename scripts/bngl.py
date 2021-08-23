@@ -15,6 +15,7 @@ import webbrowser
 
 import osgb
 
+
 def get_likely_lon_lat(possible_number):
     "Is this supposed to be a lat or lon coordinate?"
     try:
@@ -22,8 +23,8 @@ def get_likely_lon_lat(possible_number):
     except ValueError:
         return None
 
-    if -20 < actual_number < 70: # Useful Lat is between 49 and 65, useful Lon between -9 and 2
-        return actual_number     # and it's OK to return 0 - see below
+    if -20 < actual_number < 70:  # Useful Lat is between 49 and 65, useful Lon between -9 and 2
+        return actual_number  # and it's OK to return 0 - see below
 
     return None
 
@@ -32,7 +33,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Convert coordinates to and from OSGB grid refs and lat/lon.")
     parser.add_argument("--random", action="store_true", help="Pick a place at random")
     parser.add_argument("--show", action='store_true', help="Show this place on Streetview.co.uk")
-    parser.add_argument("grid_or_ll_element", type=str, nargs='*', default=['SP', '101', '203'], 
+    parser.add_argument("grid_or_ll_element", type=str, nargs='*', default=['SP', '101', '203'],
                         help="A grid reference string or lat/lon pair.")
     args = parser.parse_args()
 
@@ -44,9 +45,9 @@ if __name__ == "__main__":
 
     else:
         agenda = ' '.join(args.grid_or_ll_element)
-        alphabet = ' 1234567890-.+/:ABCDEFGHJKLMNOPQRSTUVWXYZabcdef' # there is no I in this
-        agenda = agenda.replace(',', ' ') # treat commas as spaces
-        agenda = ''.join(x for x in agenda if x in alphabet) # and remove unwanted characters 
+        alphabet = ' 1234567890-.+/:ABCDEFGHJKLMNOPQRSTUVWXYZabcdef'  # there is no I in this
+        agenda = agenda.replace(',', ' ')  # treat commas as spaces
+        agenda = ''.join(x for x in agenda if x in alphabet)  # and remove unwanted characters
 
     m = re.match(r'([456]\d) ([012345]?\d) ([012345]?\d) N (\d) ([012345]?\d) ([012345]?\d) ([EW])', agenda)
     if m is not None:
@@ -60,7 +61,7 @@ if __name__ == "__main__":
     # if the arguments consists of just two likely looking numbers...
     # You can't just say "all(floats)" because 0 is a valid Longitude
     if len(latlon) == 2 and all(x is not None for x in latlon):
-        (lon, lat) = sorted(latlon) # Lon is always less than Lat in OSGB
+        (lon, lat) = sorted(latlon)  # Lon is always less than Lat in OSGB
         (e, n) = osgb.ll_to_grid(lat, lon)
         (olat, olon) = (lat, lon)
         (oe, on) = osgb.ll_to_grid(lat, lon, 'OSGB36')
