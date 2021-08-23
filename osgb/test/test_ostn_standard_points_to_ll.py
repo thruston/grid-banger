@@ -22,12 +22,12 @@ test_input = dict()
 expected_output = dict()
 results = dict()
 
-with open('test/OSTN15_OSGM15_TestInput_OSGBtoETRS.txt') as test_input_data:
+with open('osgb/test/OSTN15_OSGM15_TestInput_OSGBtoETRS.txt') as test_input_data:
     reader = csv.DictReader(test_input_data)
     for r in reader:
         test_input[r['PointID']] = (float(r['OSGB36 Eastings']), float(r['OSGB36 Northing']))
 
-with open('test/OSTN15_OSGM15_TestOutput_OSGBtoETRS.txt') as test_output_data:
+with open('osgb/test/OSTN15_OSGM15_TestOutput_OSGBtoETRS.txt') as test_output_data:
     reader = csv.DictReader(test_output_data)
     for r in reader:
         if r['Iteration No./RESULT'] != 'RESULT':

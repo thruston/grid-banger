@@ -17,12 +17,12 @@ import pytest
 
 test_input = dict()
 expected_output = dict()
-with open('test/OSTN15_OSGM15_TestInput_ETRStoOSGB.txt') as test_input_file:
+with open('osgb/test/OSTN15_OSGM15_TestInput_ETRStoOSGB.txt') as test_input_file:
     reader = csv.DictReader(test_input_file)
     for r in reader:
         test_input[r['PointID']] = (float(r['ETRS89 Latitude']), float(r['ETRS Longitude']))
 
-with open('test/OSTN15_OSGM15_TestOutput_ETRStoOSGB.txt') as test_output_file:
+with open('osgb/test/OSTN15_OSGM15_TestOutput_ETRStoOSGB.txt') as test_output_file:
     reader = csv.DictReader(test_output_file)
     for r in reader:
         expected_output[r['PointID']] = (float(r['OSGBEast']), float(r['OSGBNorth']))
