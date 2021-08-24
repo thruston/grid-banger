@@ -64,7 +64,7 @@ Each of the modules contains detailed documentation and examples in
     pydoc osgb/gridder.py
 
 
-For more please see `the page at RTD <https://grid-banger.readthedocs.io/en/latest/`_.
+For more please see `the page at RTD <https://grid-banger.readthedocs.io/en/latest/>`_.
 
 compatibility
 -------------
