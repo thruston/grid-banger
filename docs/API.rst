@@ -32,8 +32,8 @@ The first has just five entries, as follows::
 
 The ``map_locker`` is rather larger; it has an entry for each sheet (and
 sub-sheet) in the five series.  The keys are the map labels consisting of the
-series letter + ``:`` + the sheet number.  The values are named tuples called
-"Sheet" with data for the map.  Here is an example::
+series letter + ``:`` + the sheet number.  The values are `named tuples <https://docs.python.org/3/library/collections.html#collections.namedtuple>`_
+with a typename of "Sheet" with data for the map.  Here is an example::
 
     {
         "A:4" : Sheet(
@@ -46,6 +46,8 @@ series letter + ``:`` + the sheet number.  The values are named tuples called
             polygon = [[420000,1107000],[460000,1107000],[460000,1147000],[420000,1147000],[420000,1107000]]
         ),
     }
+
+These are the field names:
 
 - `bbox` is a list of two (easting, northing) pairs that give the LL and UR corners of the bounding box of the map.
 - `area` is a string giving the area of the sheet in square km.

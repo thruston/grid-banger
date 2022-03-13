@@ -158,7 +158,8 @@ def grid_to_ll(easting, northing, model='WGS84'):
     >>> grid_to_ll(easting=217380, northing=896060, model='OSGB36')
     (57.91671633292687, -5.083330213971718)
 
-    Check that outside area works
+    Check that outside area works:
+
     >>> tuple(round(x, 8) for x in grid_to_ll(easting=-100, northing=-100))
     (49.76584553, -7.55843918)
 
