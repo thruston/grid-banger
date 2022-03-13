@@ -95,11 +95,11 @@ ETRS89
 
 The latitude and longitude marked on OS maps printed before 2015 are given in
 the OSGB36 model.  The latitude and longitude you read from your GPS device, or
-from Wikipedia, or Google Earth are in the WGS84 model.  So the point with
-latitude 51.4778 and longitude 0 in the OSGB36 model is on the prime meridian
-line in the courtyard of the Royal Observatory in Greenwich, but the point with
-the same coordinates in the WGS84 model is about 120 metres away to the
-south-east, in the park.
+from Wikipedia, or Google Earth are in the WGS84 model.  So in the OSGB36
+model, the point with latitude 51.4778 and longitude zero is on the prime
+meridian line in the courtyard of the Royal Observatory in Greenwich, but the
+point with the same coordinates in the WGS84 model is about 120 metres away to
+the south-east, in the park.
 
 In these modules the shape used for the projection of latitude and
 longitude onto the grid is WGS84 unless you specifically set it to use
