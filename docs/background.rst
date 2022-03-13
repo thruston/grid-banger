@@ -20,7 +20,7 @@ that might help you get the most out of them.
 The algorithms and theory for these conversion routines are all from *A Guide
 to Coordinate Systems in Great Britain* published by the OSGB, April 1999
 (Revised 2018) and available from the `Ordnance Survey website
-<http://www.ordnancesurvey.co.uk/>`_.  (You will have to hunt about for it, as
+<https://www.ordnancesurvey.co.uk/>`_.  (You will have to hunt about for it, as
 they keep moving it, but try their search function).  You may also like to read
 some of the other introductory material there.  Should you be hoping to adapt
 this code to your own custom Mercator projection, you will find the paper
