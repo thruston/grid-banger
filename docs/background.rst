@@ -393,6 +393,12 @@ On my old 2011 Mac Mini I get this::
     ll_to_grid: 49141/s 0.0203 ms per call
     grid_to_ll: 15357/s 0.0651 ms per call
 
+On the newer 2019 Macbook Pro I get::
+
+    Grid banger bench mark running under CPython 3.9.13 on macOS-12.4-x86_64-i386-64bit
+    ll_to_grid: 135829/s 0.00736 ms per call
+    grid_to_ll: 38655/s 0.0259 ms per call
+
 
 Maps 
 ----
