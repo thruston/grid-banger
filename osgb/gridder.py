@@ -12,7 +12,7 @@ import math
 import pkgutil
 import re
 
-__all__ = ['format_grid', 'parse_grid', 'sheet_keys']
+__all__ = ['format_grid', 'parse_grid', 'sheet_keys', 'get_sheet']
 
 GRID_SQ_LETTERS = 'VWXYZQRSTULMNOPFGHJKABCDE'
 GRID_SIZE = int(math.sqrt(len(GRID_SQ_LETTERS)))

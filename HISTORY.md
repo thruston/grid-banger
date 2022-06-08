@@ -12,3 +12,7 @@ The change history for osgb
 - Documentation at https://grid-banger.readthedocs.io/en/latest/index.html
 - Moved all functions from `mapping` module into `gridder`
 - Fixed issue with array.array methods for Python2 v Python3
+
+### 1.2.0
+
+- WIP - rounding flags for lat/lon, lat/lon order, Geojson output

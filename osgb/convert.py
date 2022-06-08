@@ -482,6 +482,28 @@ def _reverse_project_onto_ellipsoid(easting, northing, model):
     return (phi * 57.29577951308232087679815481410517,
             lam * 57.29577951308232087679815481410517)
 
+def _km_parts(metres):
+    '''Take a positive length in metres and return whole km, plus fractional km part
+
+    >>> _km_parts(3.1415)
+    (0, 0.0031415)
+
+    >>> _km_parts(543245.345)
+    (543, 0.245345)
+
+    >>> _km_parts(0)
+    (0, 0.0)
+
+    >>> _km_parts(1241244)
+    (1241, 0.244)
+
+    >>> _km_parts(50000)
+    (50, 0.0)
+
+    '''
+    x, y = divmod(metres / 1000, 1)
+    return (int(x), round(y, 9))
+
 
 def _find_OSTN_shifts_at(easting, northing):
     '''Get the OSTN shifted at a pseudo grid reference.
@@ -577,8 +599,8 @@ def _find_OSTN_shifts_at(easting, northing):
     if not 0 < northing < 1250000:
         return None
 
-    east_km = int(easting / 1000)
-    north_km = int(northing / 1000)
+    east_km, t = _km_parts(easting)
+    north_km, u = _km_parts(northing)
 
     lle = (OSTN_EE_BASE + OSTN_EE_SHIFTS[east_km + north_km * 701])/1000
     lre = (OSTN_EE_BASE + OSTN_EE_SHIFTS[east_km + north_km * 701 + 1])/1000
@@ -589,9 +611,6 @@ def _find_OSTN_shifts_at(easting, northing):
     lrn = (OSTN_NN_BASE + OSTN_NN_SHIFTS[east_km + north_km * 701 + 1])/1000
     uln = (OSTN_NN_BASE + OSTN_NN_SHIFTS[east_km + north_km * 701 + 701])/1000
     urn = (OSTN_NN_BASE + OSTN_NN_SHIFTS[east_km + north_km * 701 + 702])/1000
-
-    t = (easting / 1000) % 1
-    u = (northing / 1000) % 1
 
     return (
         (1-t) * (1-u) * lle + t * (1-u) * lre + (1-t) * u * ule + t * u * ure,
