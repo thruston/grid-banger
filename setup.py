@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name='osgb',
-    version='1.0.0',
+    version='1.1.0',
     description='osgb - high-precision geographic coordinate conversion for Great Britain, based on Ordnance Survey data',
     long_description="Python routines for working with grid references as defined by the Ordnance Survey of Great Britain (OSGB).",
     long_description_content_type="text/markdown",

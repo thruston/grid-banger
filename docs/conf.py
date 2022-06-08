@@ -17,11 +17,11 @@ sys.path.insert(0, os.path.abspath('..'))
 # -- Project information -----------------------------------------------------
 
 project = 'osgb'
-copyright = '2021, Toby Thurston'
+copyright = '2022, Toby Thurston'
 author = 'Toby Thurston'
 
 # The full version, including alpha/beta/rc tags
-release = '1.0'
+release = '1.1.0'
 
 
 # -- General configuration ---------------------------------------------------
