@@ -8,6 +8,7 @@ from __future__ import unicode_literals, print_function, division
 
 import ast
 import collections
+import itertools
 import math
 import pkgutil
 import re
@@ -81,7 +82,7 @@ def _load_maps(series, filename):
             float(area),
             series, number, parent, title,
             ast.literal_eval(polygon)
-            )
+        )
 
     return maps
 
@@ -181,11 +182,7 @@ class FarFarAwayError(GridFormatError):
         self.northing = northing
 
     def __str__(self):
-        return "The spot with coordinates" \
-                + " " \
-                + "({:g}, {:g})".format(self.easting, self.northing) \
-                + " " \
-                + "is too far from the OSGB grid"
+        return f"The spot with coordinates ({self.easting:g}, {self.northing:g} is too far from the OSGB grid"
 
 
 def _is_left_right_or_on(x, y, a, b):
@@ -202,15 +199,22 @@ def _is_left_right_or_on(x, y, a, b):
     return (b[0] - a[0]) * (y - a[1]) - (x - a[0]) * (b[1] - a[1])
 
 
+def _pairwise(iterable):
+    # _pairwise('ABCDEFG') --> AB BC CD DE EF FG
+    a, b = itertools.tee(iterable)
+    next(b, None)
+    return zip(a, b)
+
+
 def _winding_number(x, y, poly):
     '''This is adapted from http://geomalgorithms.com/a03-_inclusion.html'''
     w = 0
-    for i in range(len(poly)-1):
-        if poly[i][1] <= y:
-            if poly[i+1][1] > y and _is_left_right_or_on(x, y, poly[i], poly[i+1]) > 0:
+    for a, b in _pairwise(poly):
+        if a[1] <= y:
+            if b[1] > y and _is_left_right_or_on(x, y, a, b) > 0:
                 w += 1
         else:
-            if poly[i+1][1] <= y and _is_left_right_or_on(x, y, poly[i], poly[i+1]) < 0:
+            if b[1] <= y and _is_left_right_or_on(x, y, a, b) < 0:
                 w -= 1
     return w
 
@@ -343,8 +347,8 @@ def format_grid(easting, northing=None, form='SS EEE NNN'):
         raise FaultyFormError(form)
 
     (space_a, e_spec, space_b, n_spec) = m.group(1, 2, 3, 4)
-    e = int(e/10**(5-len(e_spec)))
-    n = int(n/10**(5-len(n_spec)))
+    e = int(e / 10 ** (5 - len(e_spec)))
+    n = int(n / 10 ** (5 - len(n_spec)))
 
     return sq \
         + space_a + '{0:0{1}d}'.format(e, len(e_spec)) \
@@ -536,7 +540,7 @@ If there's no matching input then a GarbageError error is raised.
 
         en_tuple = _get_eastings_northings(grid_string)
         if en_tuple is not None:
-            return (en_tuple[0]+offsets[0], en_tuple[1]+offsets[1])
+            return (en_tuple[0] + offsets[0], en_tuple[1] + offsets[1])
 
     # just a pair of numbers perhaps?
     try:
@@ -634,7 +638,7 @@ def _get_eastings_northings(s):
         gr = t[0]
         f = len(gr)
         if f in [2, 4, 6, 8, 10]:
-            f = int(f/2)
+            f = int(f / 2)
             e, n = (gr[:f], gr[f:])
         else:
             return None
@@ -642,7 +646,7 @@ def _get_eastings_northings(s):
         return None
 
     figs = min(5, max(len(e), len(n)))
-    return (int(e)*10**(5-figs), int(n)*10**(5-figs))
+    return (int(e) * 10 ** (5 - figs), int(n) * 10 ** (5 - figs))
 
 
 def sheet_keys(easting, northing, series='ABCHJ'):

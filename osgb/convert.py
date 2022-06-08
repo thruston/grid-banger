@@ -364,10 +364,10 @@ def _compute_M(phi, model):
     _, b, n, _ = ELLIPSOID_MODELS[model]
 
     return CONVERGENCE_FACTOR * b * (
-        (1 + n * (1 + 5/4*n * (1 + n))) * p_minus
-        - 3*n * (1 + n * (1 + 7/8*n)) * math.sin(p_minus) * math.cos(p_plus)
-        + (15/8*n * (n * (1 + n))) * math.sin(2*p_minus) * math.cos(2*p_plus)
-        - 35/24*n**3 * math.sin(3*p_minus) * math.cos(3*p_plus)
+        (1 + n * (1 + 5 / 4 * n * (1 + n))) * p_minus
+        - 3 * n * (1 + n * (1 + 7 / 8 * n)) * math.sin(p_minus) * math.cos(p_plus)
+        + (15 / 8 * n * (n * (1 + n))) * math.sin(2 * p_minus) * math.cos(2 * p_plus)
+        - 35 / 24 * n * n * n * math.sin(3 * p_minus) * math.cos(3 * p_plus)
     )
 
 
@@ -481,6 +481,7 @@ def _reverse_project_onto_ellipsoid(easting, northing, model):
     # now put into degrees & return
     return (phi * 57.29577951308232087679815481410517,
             lam * 57.29577951308232087679815481410517)
+
 
 def _km_parts(metres):
     '''Take a positive length in metres and return whole km, plus fractional km part
