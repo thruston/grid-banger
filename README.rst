@@ -4,6 +4,9 @@ osgb
 .. image:: https://github.com/thruston/grid-banger/actions/workflows/python-app.yml/badge.svg
     :target: https://github.com/thruston/grid-banger/actions/workflows/python-app.yml
 
+.. image:: https://img.shields.io/pypi/v/osgb.svg
+    :target: https://pypi.org/project/osgb/
+
 Python routines for working with grid references as defined by the Ordnance Survey of Great Britain (OSGB).
 
 Toby Thurston -- June 2022
