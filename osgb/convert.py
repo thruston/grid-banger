@@ -15,9 +15,13 @@ import sys
 __all__ = ['grid_to_ll', 'll_to_grid']
 
 # The ellipsoid models for projection to and from the grid
+# a, b are the semi-major and semi-minor axes of the models
+# n = (a-b)/(a+b) 
+# ee = 1-(b/a)**2
+
 ELLIPSOID_MODELS = {
-    'WGS84': (6378137.000, 6356752.31424518, 0.0016792203863836474, 0.006694379990141316996137233540),
-    'OSGB36': (6377563.396, 6356256.909, 0.0016732203289875152, 0.006670540074149231821114893873561),
+    'WGS84': (6378137.000, 6356752.31424518, 0.0016792203863836474, 0.006694379990141108),
+    'OSGB36': (6377563.396, 6356256.909, 0.0016732203289874942, 0.006670540074149134),
 }
 
 # The defining constants for the OSGB grid
@@ -146,7 +150,7 @@ def grid_to_ll(easting, northing, model='WGS84'):
 
     >>> # Hoy (Orkney)
     >>> grid_to_ll(323223, 1004000, model='OSGB36')
-    (58.91680150461385, -3.3333320035568224)
+    (58.91680150461385, -3.333332003556823)
 
     >>> # Glen Achcall
     >>> grid_to_ll(217380, 896060, model='OSGB36')
@@ -626,7 +630,7 @@ def _llh_to_cartesian(lat, lon, H, model):
     area.
 
     >>> _llh_to_cartesian(53, -3, 10, 'OSGB36')
-    (3841039.2016489906, -201300.3346975291, 5070178.453880734)
+    (3841039.2016489906, -201300.3346975291, 5070178.453880735)
 
     >>> (x, y, z) =  _llh_to_cartesian(52, 1, 30, 'WGS84')
     >>> tuple(round(x, 8) for x in _cartesian_to_llh(x, y, z, 'WGS84'))

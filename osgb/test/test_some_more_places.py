@@ -15,7 +15,8 @@ def test_ten_metre_test_with_osgb():
     the sw corner of OS Explorer sheet 161 (Cobham, Surrey)
     -------------------------------------------------------
     check we are within 10m (easily the limit of my ability to measure on a 1:25000 map)
-    Note that here we are using OSGB36 through out, because the LL printed on OS maps is not based on WGS84
+    Note that here we are using OSGB36 through out, because the LL printed on pre-2015
+    OS maps is not based on WGS84.
     '''
 
     (e, n) = osgb.ll_to_grid(lat=51.3333333333, lon=-0.416666666667, model='OSGB36')
