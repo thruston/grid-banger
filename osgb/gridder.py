@@ -182,7 +182,9 @@ class FarFarAwayError(GridFormatError):
         self.northing = northing
 
     def __str__(self):
-        return f"The spot with coordinates ({self.easting:g}, {self.northing:g} is too far from the OSGB grid"
+        return "The spot with coordinates " \
+            + "({:g}, {:g})".format(self.easting, self.northing) \
+            + " is too far from the OSGB grid"
 
 
 def _is_left_right_or_on(x, y, a, b):
