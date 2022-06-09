@@ -1,6 +1,28 @@
 OSGB function reference
 =======================
 
+The OSGB package provides three modules: ``convert``, ``gridder``, and ``legacy_interface``, 
+which are documented below.
+
+Each section shows how to call each function, and explains the arguments and outputs.
+The documentation shows the long form of each call, with the module names as prefixes to each function, 
+like this::
+
+    import osgb
+    (e, n) = osgb.gridder.parse_grid("NH231424")
+    (lat, lon) = osgb.convert.grid_to_ll(122414, 123412)
+
+But if you can't remember which function is in which module, or you just get tired of 
+typing the prefix names, you can optionally omit the module names, thanks to a bit of 
+syntactic-sugar magic, so the above snippet should work the same if you put::
+
+    import osgb
+    (e, n) = osgb.parse_grid("NH231424")
+    (lat, lon) = osgb.grid_to_ll(122414, 123412)
+
+which is a bit neater.  This applies to all the documented functions in this section.
+
+
 OSGB Convert
 ------------
 
@@ -51,7 +73,7 @@ These are the field names:
 
 - `bbox` is a list of two (easting, northing) pairs that give the LL and UR corners of the bounding box of the map.
 - `area` is a string giving the area of the sheet in square km.
-- `series` is one of the keys from :py:data:`osgb.mapping.name_for_map_series`
+- `series` is one of the keys from :py:data:`osgb.name_for_map_series` given above.
 - `number` is a string giving the sheet number/label
 - `parent` is a the key of the parent sheet.  This is only relevant for insets and subsheets. 
   For regular sheets, the parent is set to the empty string.

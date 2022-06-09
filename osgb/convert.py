@@ -86,30 +86,43 @@ class UndefinedModelError(Error):
     def __str__(self):
         return "{}".format(self.spam)
 
+class MissingArgumentError(Error):
+    """Raised by grid_to_ll when northing is None and easting is not a tuple
 
-def grid_to_ll(easting, northing, model='WGS84'):
+    Attributes:
+        easter -- this should have been a tuple
+
+    """
+    def __init__(self, easter):
+        self.arg = easter
+
+    def __str__(self):
+        return "This should have been a tuple: {}".format(self.arg)
+
+
+def grid_to_ll(easting, northing=None, model='WGS84'):
     """
     Convert OSGB (easting, northing) to latitude and longitude.
 
     Input
-        an (easting, northing) pair in metres from the false point of
+        an ``(easting, northing)`` pair in metres from the false point of
         origin of the grid.
 
         Note that if you are starting with a tradtional grid reference
         string like ``TQ183506``, you need to parse it into an (easting,
         northing) pair using the :py:func:`parse_grid` function from
-        :py:mod:`osgb.gridder` before you can pass it to this function.
+        :py:mod:`osgb.gridder` before you can pass it to this function::
 
-        ``lat, lon = osgb.grid_to_ll(*osgb.parse_grid("SU234131"))``
+          lat, lon = osgb.grid_to_ll(osgb.parse_grid("TQ183506"))
 
     Output
-        a (latitude, longitude) pair in degrees; postive East/North,
-        negative West/South
+        a ``(latitude, longitude)`` pair in decimal degrees; postive North/East,
+        negative South/West (that is, following ISO 6709 conventions).
 
-    An optional argument 'model' defines the graticule model to use.
-    The default is 'WGS84', the standard model used for the GPS network
+    An optional argument ``model`` defines the graticule model to use.
+    The default is ``WGS84``, the standard model used for the GPS network
     and for references given on Google Earth or Wikipedia, etc.  The
-    only other valid value is 'OSGB36' which is the traditional model
+    only other valid value is ``OSGB36`` which is the traditional model
     used in the UK before GPS.  Latitude and longitude coordinates
     marked around the edges of OS maps published before 2015 are given
     in the OSGB36 model.
@@ -156,13 +169,17 @@ def grid_to_ll(easting, northing, model='WGS84'):
     >>> grid_to_ll(217380, 896060, model='OSGB36')
     (57.91671633292687, -5.083330213971718)
 
+    You can provide a tuple instead of two separate args:
+
+    >>> grid_to_ll((217380, 896060))
+    (57.9163775641562, -5.084587951536275)
+
     Finally here is an example of how to use the optional keyword arguments:
 
-    >>> # Keyword arguments for Glen Achcall
     >>> grid_to_ll(easting=217380, northing=896060, model='OSGB36')
     (57.91671633292687, -5.083330213971718)
 
-    Check that outside area works:
+    And a check that conversion works outside the defined OSTN15 polygon:
 
     >>> tuple(round(x, 8) for x in grid_to_ll(easting=-100, northing=-100))
     (49.76584553, -7.55843918)
@@ -170,9 +187,17 @@ def grid_to_ll(easting, northing, model='WGS84'):
     >>> tuple(round(x, 8) for x in grid_to_ll(easting=1, northing=1))
     (49.76681683, -7.55714701)
 
+    But beware that this only works for the area immediately around the British Isles.
+
     """
     if model not in ELLIPSOID_MODELS:
         raise UndefinedModelError(model)
+
+    if northing is None:
+        if type(easting) is tuple:
+            (easting, northing) = easting
+        else:
+            raise MissingArgumentError(easting)
 
     (os_lat, os_lon) = _reverse_project_onto_ellipsoid(easting, northing, 'OSGB36')
 
@@ -293,11 +318,11 @@ def ll_to_grid(lat, lon, model='WGS84', rounding=-1):
     >>> ll_to_grid(51.3, -10)
     (-157250.0, 186110.0)
 
-    ``ll_to_grid`` also takes an optional argument that sets the
-    ellipsoid model to use.  This defaults to ``WGS84``, the name of the
-    normal model for working with normal GPS coordinates, but if you
-    want to work with the traditional latitude and longitude values
-    printed on OS maps then you should add an optional model argument
+    ``ll_to_grid`` also takes an optional argument that sets the ellipsoid
+    model to use.  This defaults to ``WGS84``, the name of the normal model for
+    working with normal GPS coordinates, but if you want to work with the
+    traditional latitude and longitude values printed on OS maps before 2015
+    then you should add an optional model argument
 
     >>> ll_to_grid(49, -2, model='OSGB36')
     (400000.0, -100000.0)
