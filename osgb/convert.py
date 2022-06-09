@@ -100,6 +100,8 @@ def grid_to_ll(easting, northing, model='WGS84'):
         northing) pair using the :py:func:`parse_grid` function from
         :py:mod:`osgb.gridder` before you can pass it to this function.
 
+        ``lat, lon = osgb.grid_to_ll(*osgb.parse_grid("SU234131"))``
+
     Output
         a (latitude, longitude) pair in degrees; postive East/North,
         negative West/South
@@ -115,9 +117,7 @@ def grid_to_ll(easting, northing, model='WGS84'):
     **Accuracy**: Grid references rounded to whole metres will give
     lat/lon that are accurate to about 5 decimal places.  In the UK,
     0.00001 of a degree of latitude is about 70cm, 0.00001 of a degree
-    of longitude is about 1m.
-
-    For example:
+    of longitude is about 1m.  For example:
 
     >>> # Glendessary, the graticule marker on Sheet 33
     >>> lat, lon = grid_to_ll(197575, 794790, model='OSGB36')
@@ -171,6 +171,8 @@ def grid_to_ll(easting, northing, model='WGS84'):
     (49.76681683, -7.55714701)
 
     """
+    if model not in ELLIPSOID_MODELS:
+        raise UndefinedModelError(model)
 
     (os_lat, os_lon) = _reverse_project_onto_ellipsoid(easting, northing, 'OSGB36')
 
