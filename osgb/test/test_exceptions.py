@@ -5,7 +5,7 @@ import osgb
 
 def test_wrong_model():
     with pytest.raises(osgb.convert.UndefinedModelError) as e:
-        t = osgb.grid_to_ll(*osgb.parse_grid("NH123433"), 'EDM50')
+        t = osgb.grid_to_ll(428765, 114567, 'EDM50')
 
 def test_junk():
     with pytest.raises(osgb.gridder.GarbageError) as e:
