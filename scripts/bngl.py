@@ -1,4 +1,5 @@
 #! /usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 """Convert coordinates.
 
@@ -44,8 +45,7 @@ def hms(degrees):
         if mm == 60:
             dd += 1
             mm = 0
-
-    return "{}{}° {}' {}''".format(sign, dd, mm, ss)
+    return "{}{}°{}′{}″".format(sign, dd, mm, ss)
 
 
 def format_degrees(phi, lam, want_sex=True):
