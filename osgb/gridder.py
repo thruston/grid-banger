@@ -26,7 +26,7 @@ MAX_GRID_SIZE = MINOR_GRID_SQ_SIZE * len(GRID_SQ_LETTERS)
 
 def get_sheet(key):
     '''Fetch a map from the locker:
-    
+
     >>> print(get_sheet("A:1").title)
     Shetland - Yell, Unst and Fetlar
 

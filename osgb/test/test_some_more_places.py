@@ -33,6 +33,13 @@ def test_reading_from_landranger():
     assert gr == 'NH 17379 96054'
 
 
+def test_reading_from_explorer():
+    ''' In the sea near Coquet Island, SE corner of Explorer 332
+    '''
+    gr = osgb.format_grid(osgb.ll_to_grid(lat=55+19/60, lon=-1.5, model='WGS84'), form='GPS')
+    assert gr == 'NU 31831 02623'
+
+
 def test_glendessary():
     '''
     # and now a boggy path just north of Glendessary in Lochaber

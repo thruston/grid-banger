@@ -130,6 +130,11 @@ The two PDF files included are examples of the output.
    in the file.  This uses the external module called ``gpxpy`` to parse the
    GPX data.
 
+4. The script called ``zero-points.py`` prints out a list of all the "meeting of myriad" points
+   in the UK that are on an OSGB map.  These are the points with grid references that are all zeros
+   like NJ000000 (just above Loch Echtachan) or OV000000 (Beast Cliff).  If you plan on visiting them 
+   all, beware that you will need a boat for some of them.
+
 
 
 test

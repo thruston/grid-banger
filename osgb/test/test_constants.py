@@ -2,8 +2,9 @@
 
 import osgb
 
+
 def _calculations(name):
-    
+    "Perform calculations to verify constants"
     a, b, n, e = osgb.convert.ELLIPSOID_MODELS[name]
     calculated_n = (a - b) / (a + b)
     calculated_e = 1 - (b * b) / (a * a)
@@ -25,8 +26,10 @@ def _calculations(name):
 
     return ok
 
+
 def test_calculations_WGS84():
     assert _calculations('WGS84')
+
 
 def test_calculations_OSGB36():
     assert _calculations('OSGB36')

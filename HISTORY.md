@@ -15,6 +15,15 @@ The change history for osgb
 
 ### 1.2.0
 
-- WIP - rounding flags for lat/lon, lat/lon order, Geojson output
+- WIP lat/lon order, Geojson output
+
+- Changed rounding behaviour for ``osgb.convert.grid_to_ll``
+
+    This is a mildly breaking change, in that the default outputs will have fewer
+    decimal places, but it does *not* mean any loss of accuracy.  If your GR is in
+    whole metres, your lat/lon will be rounded to 6 decimal places which is about 10cm
+    of accuracy.  A new "rounding" keyword arg allows you to have more places if you
+    really want them.
+
 - Added a zero-points script to show "meetings of Myriads"
 - Added flag to bngl.py to show lat/lon in degrees-minutes-seconds notation

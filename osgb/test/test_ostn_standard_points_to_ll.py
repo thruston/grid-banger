@@ -34,7 +34,7 @@ with open('osgb/test/OSTN15_OSGM15_TestOutput_OSGBtoETRS.txt') as test_output_da
 def test_all(chatty=False):
     acceptable_error_mm = 0.02
     for k in sorted(test_input):
-        (lat, lon) = osgb.grid_to_ll(*test_input[k])
+        (lat, lon) = osgb.grid_to_ll(test_input[k], rounding=10)
         phi = math.radians(lat)
         one_lat_in_mm = 111132954 - 559822 * math.cos(2 * phi) + 1175 * math.cos(4 * phi)
         one_lon_in_mm = 111319490.79327355 * math.cos(phi) / math.sqrt(1 - 0.006694380004260827 * math.sin(phi) ** 2)

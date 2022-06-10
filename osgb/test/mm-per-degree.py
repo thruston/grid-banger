@@ -10,9 +10,9 @@ if __name__ == "__main__":
     parser.add_argument("-a", "--lat", action='store_true')
     args = parser.parse_args()
 
-    d = 10 ** -args.diff if args.diff else 0.1
+    d = 10 ** -args.diff if args.diff else 0.00001
     measure = 'latitude' if args.lat else 'longitude'
-    print("{:g} degrees difference in {} makes this difference in metres...".format(d, measure))
+    print("{} degrees difference in {} makes this difference in metres...".format('{:.9f}'.format(d).rstrip('0'), measure))
 
     print('   ' + ' '.join('{:>6}'.format(d) for d in range(-7, 2)))
     for lat in range(60, 49, -1):

@@ -22,6 +22,7 @@ def does_not_overlap_parent(key):
             or inset.bbox[1][1] < parent.bbox[0][1]
             or inset.bbox[0][1] > parent.bbox[1][1])
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog='plot_maps',
                                      formatter_class=argparse.RawDescriptionHelpFormatter,

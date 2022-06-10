@@ -71,34 +71,16 @@ def osgb_to_lonlat(osgb_str, model='OSGB36'):
     For example::
 
             # just outside Ipswich, about 1.088975 52.129892
-            >>> lon1, lat1 = osgb_to_lonlat('TM114 525')
-            >>> 1.0889 < lon1 < 1.0890
-            True
-            >>> 52.1298 < lat1 < 52.1299
-            True
-            >>> (round(lon1, 14), round(lat1, 14))
-            (1.08897495610794, 52.12989202825308)
-
+            >>> osgb_to_lonlat('TM114 525')
+            (1.088975, 52.129892)
 
             # accepts poor formating
-            >>> lon2, lat2 = osgb_to_lonlat(' TM 114525 ')
-            >>> lon2 == lon1
-            True
-            >>> lat2 == lat1
-            True
+            >>> osgb_to_lonlat(' TM 114525 ')
+            (1.088975, 52.129892)
 
             # accepts higher resolution
-            >>> lon3, lat3 = osgb_to_lonlat('TM1140052500')
-            >>> 1.0889 < lon3 < 1.0890
-            True
-            >>> 52.1298 < lat3 < 52.1299
-            True
-            >>> (round(lon3, 14), round(lat3, 14))
-            (1.08897495610794, 52.12989202825308)
-
-
+            >>> osgb_to_lonlat('TM1140052500')
+            (1.088975, 52.129892)
 
     """
-    (e, n) = osgb.parse_grid(osgb_str)
-    (lat, lon) = osgb.grid_to_ll(e, n, model=model)
-    return (lon, lat)
+    return tuple(reversed(osgb.grid_to_ll(osgb.parse_grid(osgb_str), model=model)))

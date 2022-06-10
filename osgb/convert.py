@@ -15,9 +15,10 @@ import sys
 __all__ = ['grid_to_ll', 'll_to_grid']
 
 # The ellipsoid models for projection to and from the grid
-# a, b are the semi-major and semi-minor axes of the models
-# n = (a-b)/(a+b) 
-# ee = 1-(b/a)**2
+# each line has a, b, n, ee
+# - a, b are the semi-major and semi-minor axes of the models
+# - n = (a-b)/(a+b)
+# - ee = 1-(b/a)**2
 
 ELLIPSOID_MODELS = {
     'WGS84': (6378137.000, 6356752.31424518, 0.0016792203863836474, 0.006694379990141108),
@@ -86,6 +87,7 @@ class UndefinedModelError(Error):
     def __str__(self):
         return "{}".format(self.spam)
 
+
 class MissingArgumentError(Error):
     """Raised by grid_to_ll when northing is None and easting is not a tuple
 
@@ -100,7 +102,7 @@ class MissingArgumentError(Error):
         return "This should have been a tuple: {}".format(self.arg)
 
 
-def grid_to_ll(easting, northing=None, model='WGS84'):
+def grid_to_ll(easting, northing=None, model='WGS84', rounding=None):
     """
     Convert OSGB (easting, northing) to latitude and longitude.
 
@@ -127,23 +129,31 @@ def grid_to_ll(easting, northing=None, model='WGS84'):
     marked around the edges of OS maps published before 2015 are given
     in the OSGB36 model.
 
-    **Accuracy**: Grid references rounded to whole metres will give
-    lat/lon that are accurate to about 5 decimal places.  In the UK,
-    0.00001 of a degree of latitude is about 70cm, 0.00001 of a degree
-    of longitude is about 1m.  For example:
+    An optional argument ``rounding`` controls how many decimal places are
+    provided in the output.  Grid references rounded to whole metres will give
+    lat/lon that are accurate to about 5 decimal places.  But Grid references
+    in millimetres will give results accurate to 8 decimal places.  The default
+    value of ``rounding`` is None, and the default behaviour is to round
+    appropriately according to the number of decimal places given in the input.
+
+    Effectively if your input is in whole metres you will get 6 places,
+    but if your input has any decimal places of metres you will get 9 places.
+    You can supply your own value of ``rounding`` if required.  The allowed
+    values are the same as the second argument to the Python built-in ``round``
+    function.
+
+    Note that more decimal places do not make the conversions more accurate!
+    And that in the UK, 0.000001 of a degree of latitude is about 7cm, 0.000001
+    of a degree of longitude is about 10cm.
 
     >>> # Glendessary, the graticule marker on Sheet 33
-    >>> lat, lon = grid_to_ll(197575, 794790, model='OSGB36')
-    >>> (round(lat, 5), round(lon, 5))
-    (56.99998, -5.3333)
+    >>> grid_to_ll(197574, 794793, model='OSGB36')
+    (57.000002, -5.33332)
 
     >>> # Scorriton
     >>> lat, lon = grid_to_ll(269995, 68361, model='OSGB36')
     >>> (round(lat, 5), round(lon, 5))
     (50.5, -3.83333)
-
-    But Grid references in millimetres will give results accurate to 8
-    decimal places.
 
     >>> # Cranbourne Chase, on the central meridian
     >>> lat, lon = grid_to_ll(400000, 122350.044, model='OSGB36')
@@ -151,41 +161,38 @@ def grid_to_ll(easting, northing=None, model='WGS84'):
     (51.0, -2.0)
 
     >>> # The example from the OSGB documentation
-    >>> lat, lon = grid_to_ll(651409.903, 313177.27, model='OSGB36')
-    >>> (round(lat, 8), round(lon, 8))
+    >>> grid_to_ll(651409.903, 313177.27, model='OSGB36', rounding=8)
     (52.6575703, 1.71792158)
 
-    The routines will produce lots more decimal places, so that you can
-    choose what rounding you want, although they aren't really
-    meaningful beyond nine places, since the conversion routines
-    supplied by the OS are only designed to be accurate to about 1mm (8
-    places).
+    The routines will produce lots more decimal places, and you can choose
+    what rounding you want, although they aren't really meaningful beyond nine
+    places, since the conversion routines supplied by the OS are only designed
+    to be accurate to about 1mm (8 places).
 
     >>> # Hoy (Orkney)
-    >>> grid_to_ll(323223, 1004000, model='OSGB36')
-    (58.91680150461385, -3.333332003556823)
+    >>> grid_to_ll(323223, 1004000, model='OSGB36', rounding=10)
+    (58.9168015046, -3.3333320036)
 
     >>> # Glen Achcall
-    >>> grid_to_ll(217380, 896060, model='OSGB36')
-    (57.91671633292687, -5.083330213971718)
+    >>> grid_to_ll(217380, 896060, model='OSGB36', rounding=10)
+    (57.9167163329, -5.083330214)
 
     You can provide a tuple instead of two separate args:
 
-    >>> t = grid_to_ll((217380, 896060))
-    >>> tuple(round(x, 8) for x in t)
-    (57.91637756, -5.08458795)
+    >>> grid_to_ll((217380, 896060))
+    (57.916378, -5.084588)
 
     Finally here is an example of how to use the optional keyword arguments:
 
     >>> grid_to_ll(easting=217380, northing=896060, model='OSGB36')
-    (57.91671633292687, -5.083330213971718)
+    (57.916716, -5.08333)
 
     And a check that conversion works outside the defined OSTN15 polygon:
 
-    >>> tuple(round(x, 8) for x in grid_to_ll(easting=-100, northing=-100))
+    >>> grid_to_ll(easting=-100, northing=-100, rounding=8)
     (49.76584553, -7.55843918)
 
-    >>> tuple(round(x, 8) for x in grid_to_ll(easting=1, northing=1))
+    >>> grid_to_ll(easting=1, northing=1, rounding=8)
     (49.76681683, -7.55714701)
 
     But beware that this only works for the area immediately around the British Isles.
@@ -200,11 +207,18 @@ def grid_to_ll(easting, northing=None, model='WGS84'):
         else:
             raise MissingArgumentError(easting)
 
+    def _appd(input):
+        "Find appropriate decimals for this coordinate"
+        s = '{:.3f}'.format(input)
+        return 6 if s.endswith('.000') else 9
+
+    decimals = rounding if type(rounding) is int else max(_appd(easting), _appd(northing))
+
     (os_lat, os_lon) = _reverse_project_onto_ellipsoid(easting, northing, 'OSGB36')
 
     # if we want OS map LL we are done
     if model == 'OSGB36':
-        return (os_lat, os_lon)
+        return (round(os_lat, decimals), round(os_lon, decimals))
 
     # If we want WGS84 LL, we must adjust to pseudo grid if we can
     shifts = _find_OSTN_shifts_at(easting, northing)
@@ -230,13 +244,13 @@ def grid_to_ll(easting, northing=None, model='WGS84'):
             last_shifts = shifts[:]
 
         if in_ostn_polygon:
-            return _reverse_project_onto_ellipsoid(x, y, 'WGS84')
+            return tuple(round(x, decimals) for x in _reverse_project_onto_ellipsoid(x, y, 'WGS84'))
 
     # If we get here, we must use the Helmert approx
-    return _shift_ll_from_osgb36_to_wgs84(os_lat, os_lon)
+    return tuple(round(x, decimals) for x in _shift_ll_from_osgb36_to_wgs84(os_lat, os_lon))
 
 
-def ll_to_grid(lat, lon, model='WGS84', rounding=-1):
+def ll_to_grid(lat, lon, model='WGS84', rounding=None):
     """Convert a (latitude, longitude) pair to an OSGB grid (easting, northing) pair.
 
     Output
@@ -359,6 +373,22 @@ def ll_to_grid(lat, lon, model='WGS84', rounding=-1):
         >>> ll_to_grid(52, -2, rounding=4)
         (400096.2738, 233505.4033)
 
+    The allowed values are the same as the second argument
+    to the Python built-in ``round`` function.  So you can round to
+    lower precision if you want.
+
+        >>> ll_to_grid(52, -2, rounding=-2)
+        (400100.0, 233500.0)
+
+    Notice that the Python BIF ``round`` is used to do the rounding here, so
+    the grid coordinates will be given to the nearest metre or mm or whatever
+    size you choose.  This follows the sample data given by the OS, but it is
+    slightly at odds with the OSGB National Grid convention that a given point
+    is represented by the coordinates of the SW corner of the square that
+    encloses it.  So your best strategy is to use the default rounding here,
+    and rely on ``osgb.gridder.format_grid`` to do the *correct* rounding down
+    when it formats the coordinates into a grid reference.
+
     """
 
     if lat < lon:
@@ -369,7 +399,7 @@ def ll_to_grid(lat, lon, model='WGS84', rounding=-1):
 
     easting, northing = _project_onto_grid(lat, lon, model)
 
-    default_rounding = 3
+    default_decimals = 3
     if model == 'WGS84':
         shifts = _find_OSTN_shifts_at(easting, northing)
         if shifts is not None:
@@ -378,12 +408,10 @@ def ll_to_grid(lat, lon, model='WGS84', rounding=-1):
         else:
             (osgb_lat, osgb_lon) = _shift_ll_from_wgs84_to_osgb36(lat, lon)
             (easting, northing) = _project_onto_grid(osgb_lat, osgb_lon, 'OSGB36')
-            default_rounding = 0
+            default_decimals = 0
 
-    if rounding < 0:
-        rounding = default_rounding
-
-    return (round(easting, rounding), round(northing, rounding))
+    decimals = rounding if type(rounding) is int else default_decimals
+    return (round(easting, decimals), round(northing, decimals))
 
 
 def _compute_M(phi, model):
@@ -427,7 +455,7 @@ def _project_onto_grid(lat, lon, model):
     phi = lat / 57.29577951308232087679815481410517
     cp = math.cos(phi)
     sp = math.sin(phi)
-    tp = sp/cp  # cos phi cannot be zero in GB
+    tp = sp / cp  # cos phi cannot be zero in GB
 
     a, _, _, e2 = ELLIPSOID_MODELS[model]
 
@@ -436,13 +464,13 @@ def _project_onto_grid(lat, lon, model):
     nu = CONVERGENCE_FACTOR * a / math.sqrt(1 - e2 * sp * sp)
     etasq = (1 - e2 * sp * sp) / (1 - e2) - 1
 
-    II = nu/2 * sp * cp
-    III = nu/24 * sp * cp**3 * (5 - tp * tp + 9 * etasq)
-    IIIA = nu/720 * sp * cp**5 * (61 + (-58 + tp * tp) * tp * tp)
+    II = nu / 2 * sp * cp
+    III = nu / 24 * sp * cp**3 * (5 - tp * tp + 9 * etasq)
+    IIIA = nu / 720 * sp * cp**5 * (61 + (-58 + tp * tp) * tp * tp)
 
     IV = nu * cp
-    V = nu/6 * cp**3 * (etasq + 1 - tp * tp)
-    VI = nu/120 * cp**5 * (5 + (-18 + tp * tp) * tp * tp + 14 * etasq - 58 * tp * tp * etasq)
+    V = nu / 6 * cp**3 * (etasq + 1 - tp * tp)
+    VI = nu / 120 * cp**5 * (5 + (-18 + tp * tp) * tp * tp + 14 * etasq - 58 * tp * tp * etasq)
 
     dl = lon / 57.29577951308232087679815481410517 - ORIGIN_LAMBDA
     north = ORIGIN_NORTHING + M + (II + (III + IIIA * dl * dl) * dl * dl) * dl * dl
@@ -478,7 +506,7 @@ def _reverse_project_onto_ellipsoid(easting, northing, model):
     dn = northing - ORIGIN_NORTHING
     de = easting - ORIGIN_EASTING
 
-    phi = ORIGIN_PHI + dn/af
+    phi = ORIGIN_PHI + dn / af
 
     while True:
         M = _compute_M(phi, model)
@@ -493,17 +521,17 @@ def _reverse_project_onto_ellipsoid(easting, northing, model):
     splat = 1 - e2 * sp * sp
     sqrtsplat = math.sqrt(splat)
     nu = af / sqrtsplat
-    rho = af * (1 - e2) / (splat*sqrtsplat)
+    rho = af * (1 - e2) / (splat * sqrtsplat)
     etasq = nu / rho - 1
 
     VII = tp / (2 * rho * nu)
     VIII = (5 + 3 * tp * tp + etasq - 9 * tp * tp * etasq) * tp / (24 * rho * nu**3)
     IX = (61 + (90 + 45 * tp * tp) * tp * tp) * tp / (720 * rho * nu**5)
 
-    secp = 1/cp
+    secp = 1 / cp
 
     X = secp / nu
-    XI = secp / (6 * nu**3) * (nu/rho + 2 * tp * tp)
+    XI = secp / (6 * nu**3) * (nu / rho + 2 * tp * tp)
     XII = secp / (120 * nu**5) * (5 + (28 + 24 * tp * tp) * tp * tp)
     XIIA = secp / (5040 * nu**7) * (61 + (662 + (1320 + 720 * tp * tp) * tp * tp) * tp * tp)
 
@@ -635,19 +663,19 @@ def _find_OSTN_shifts_at(easting, northing):
     east_km, t = _km_parts(easting)
     north_km, u = _km_parts(northing)
 
-    lle = (OSTN_EE_BASE + OSTN_EE_SHIFTS[east_km + north_km * 701])/1000
-    lre = (OSTN_EE_BASE + OSTN_EE_SHIFTS[east_km + north_km * 701 + 1])/1000
-    ule = (OSTN_EE_BASE + OSTN_EE_SHIFTS[east_km + north_km * 701 + 701])/1000
-    ure = (OSTN_EE_BASE + OSTN_EE_SHIFTS[east_km + north_km * 701 + 702])/1000
+    lle = (OSTN_EE_BASE + OSTN_EE_SHIFTS[east_km + north_km * 701]) / 1000
+    lre = (OSTN_EE_BASE + OSTN_EE_SHIFTS[east_km + north_km * 701 + 1]) / 1000
+    ule = (OSTN_EE_BASE + OSTN_EE_SHIFTS[east_km + north_km * 701 + 701]) / 1000
+    ure = (OSTN_EE_BASE + OSTN_EE_SHIFTS[east_km + north_km * 701 + 702]) / 1000
 
-    lln = (OSTN_NN_BASE + OSTN_NN_SHIFTS[east_km + north_km * 701])/1000
-    lrn = (OSTN_NN_BASE + OSTN_NN_SHIFTS[east_km + north_km * 701 + 1])/1000
-    uln = (OSTN_NN_BASE + OSTN_NN_SHIFTS[east_km + north_km * 701 + 701])/1000
-    urn = (OSTN_NN_BASE + OSTN_NN_SHIFTS[east_km + north_km * 701 + 702])/1000
+    lln = (OSTN_NN_BASE + OSTN_NN_SHIFTS[east_km + north_km * 701]) / 1000
+    lrn = (OSTN_NN_BASE + OSTN_NN_SHIFTS[east_km + north_km * 701 + 1]) / 1000
+    uln = (OSTN_NN_BASE + OSTN_NN_SHIFTS[east_km + north_km * 701 + 701]) / 1000
+    urn = (OSTN_NN_BASE + OSTN_NN_SHIFTS[east_km + north_km * 701 + 702]) / 1000
 
     return (
-        (1-t) * (1-u) * lle + t * (1-u) * lre + (1-t) * u * ule + t * u * ure,
-        (1-t) * (1-u) * lln + t * (1-u) * lrn + (1-t) * u * uln + t * u * urn
+        (1 - t) * (1 - u) * lle + t * (1 - u) * lre + (1 - t) * u * ule + t * u * ure,
+        (1 - t) * (1 - u) * lln + t * (1 - u) * lrn + (1 - t) * u * uln + t * u * urn
     )
 
 
@@ -694,9 +722,9 @@ def _llh_to_cartesian(lat, lon, H, model):
     nu = a / math.sqrt(1 - e2 * sp * sp)
 
     return (
-        (nu+H) * cp * cl,
-        (nu+H) * cp * sl,
-        ((1-e2)*nu+H)*sp
+        (nu + H) * cp * cl,
+        (nu + H) * cp * sl,
+        ((1 - e2) * nu + H) * sp
     )
 
 
@@ -712,22 +740,22 @@ def _cartesian_to_llh(x, y, z, model):
 
     a, _, _, e2 = ELLIPSOID_MODELS[model]
 
-    p = math.sqrt(x*x+y*y)
+    p = math.sqrt(x * x + y * y)
     lam = math.atan2(y, x)
-    phi = math.atan2(z, p*(1-e2))
+    phi = math.atan2(z, p * (1 - e2))
 
     while True:
         sp = math.sin(phi)
-        nu = a / math.sqrt(1 - e2*sp*sp)
+        nu = a / math.sqrt(1 - e2 * sp * sp)
         oldphi = phi
-        phi = math.atan2(z+e2*nu*sp, p)
-        if abs(oldphi-phi) < 1E-12:
+        phi = math.atan2(z + e2 * nu * sp, p)
+        if abs(oldphi - phi) < 1E-12:
             break
 
     return (
         phi * 57.29577951308232087679815481410517,
         lam * 57.29577951308232087679815481410517,
-        p/math.cos(phi) - nu
+        p / math.cos(phi) - nu
     )
 
 
@@ -744,12 +772,12 @@ def _small_Helmert_transform_for_OSGB(direction, xa, ya, za):
     ty = direction * +125.157
     tz = direction * -542.060
     sp = direction * 0.0000204894 + 1
-    rx = (direction * -0.1502/3600) / 57.29577951308232087679815481410517
-    ry = (direction * -0.2470/3600) / 57.29577951308232087679815481410517
-    rz = (direction * -0.8421/3600) / 57.29577951308232087679815481410517
-    xb = tx + sp*xa - rz*ya + ry*za
-    yb = ty + rz*xa + sp*ya - rx*za
-    zb = tz - ry*xa + rx*ya + sp*za
+    rx = (direction * -0.1502 / 3600) / 57.29577951308232087679815481410517
+    ry = (direction * -0.2470 / 3600) / 57.29577951308232087679815481410517
+    rz = (direction * -0.8421 / 3600) / 57.29577951308232087679815481410517
+    xb = tx + sp * xa - rz * ya + ry * za
+    yb = ty + rz * xa + sp * ya - rx * za
+    zb = tz - ry * xa + rx * ya + sp * za
     return (xb, yb, zb)
 
 
