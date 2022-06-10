@@ -16,3 +16,5 @@ The change history for osgb
 ### 1.2.0
 
 - WIP - rounding flags for lat/lon, lat/lon order, Geojson output
+- Added a zero-points script to show "meetings of Myriads"
+- Added flag to bngl.py to show lat/lon in degrees-minutes-seconds notation

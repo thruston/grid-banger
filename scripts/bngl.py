@@ -2,7 +2,7 @@
 
 """Convert coordinates.
 
-Toby Thurston -- 04 Jul 2021
+Toby Thurston -- 10 Jun 2022
 """
 # allow free variable names and the occasional trailing whitespace character
 # pylint: disable=C0103, C0303
@@ -29,10 +29,38 @@ def get_likely_lon_lat(possible_number):
     return None
 
 
+def hms(degrees):
+    '''Sexagesimal notation'''
+    sign = '-' if degrees < 0 else ''
+    d = abs(degrees)
+    dd = int(d)
+    m = 60 * (d - dd)
+    mm = int(m)
+    s = 60 * (m - mm)
+    ss = round(s)
+    if ss == 60:
+        ss = 0
+        mm += 1
+        if mm == 60:
+            dd += 1
+            mm = 0
+
+    return "{}{}° {}' {}''".format(sign, dd, mm, ss)
+
+
+def format_degrees(phi, lam, want_sex=True):
+    '''Format degrees as required'''
+    if not want_sex:
+        return '{:.8f} {:.7f}'.format(phi, lam)
+
+    return hms(phi) + ' ' + hms(lam)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Convert coordinates to and from OSGB grid refs and lat/lon.")
-    parser.add_argument("--random", action="store_true", help="Pick a place at random")
     parser.add_argument("--show", action='store_true', help="Show this place on Streetview.co.uk")
+    parser.add_argument("--random", action="store_true", help="Pick a place at random")
+    parser.add_argument("--sexagesimal", action="store_true", help="Show degrees in sexagesimal")
     parser.add_argument("grid_or_ll_element", type=str, nargs='*', default=['SP', '101', '203'],
                         help="A grid reference string or lat/lon pair.")
     args = parser.parse_args()
@@ -85,7 +113,7 @@ if __name__ == "__main__":
     else:
         map_string = '(not covered by any OSGB map)'
 
-    print('WGS84  {:.8f} {:.7f}'.format(lat, lon), end=' ')
+    print('WGS84 ', format_degrees(lat, lon, args.sexagesimal), end=' ')
     print('== {:.3f} {:.3f}'.format(e, n), end=' ')
     print('== {} {}'.format(grid, map_string))
 
@@ -101,7 +129,7 @@ if __name__ == "__main__":
     else:
         map_string = '(not covered by any OSGB map)'
 
-    print('OSGB36 {:.8f} {:.7f}'.format(olat, olon), end=' ')
+    print('OSGB36', format_degrees(olat, olon, args.sexagesimal), end=' ')
     print('== {:.3f} {:.3f}'.format(oe, on), end=' ')
     print('== {} {}'.format(grid, map_string))
 
