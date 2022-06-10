@@ -20,8 +20,8 @@ if __name__ == "__main__":
 
     for n in range(13):
         for e in range(8):
-            easting = e * 100_000
-            northing = n * 100_000
+            easting = e * 100000
+            northing = n * 100000
             maps = osgb.sheet_keys(easting, northing, series=args.series)
             if maps:
                 gr = osgb.format_grid(easting, northing)
