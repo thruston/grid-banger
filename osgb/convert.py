@@ -171,9 +171,9 @@ def grid_to_ll(easting, northing=None, model='WGS84'):
 
     You can provide a tuple instead of two separate args:
 
-    >>> (lat, lon) = grid_to_ll((217380, 896060))
-    >>> '{:.9f} {:.9f}'.format(lat, lon)
-    '57.916377564 -5.084587952'
+    >>> t = grid_to_ll((217380, 896060))
+    >>> tuple(round(x, 8) for x in t)
+    (57.91637756, -5.08458795)
 
     Finally here is an example of how to use the optional keyword arguments:
 
