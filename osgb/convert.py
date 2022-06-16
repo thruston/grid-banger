@@ -133,13 +133,11 @@ def grid_to_ll(easting, northing=None, model='WGS84', rounding=None):
     (57.000002, -5.33332)
 
     >>> # Scorriton
-    >>> lat, lon = grid_to_ll(269995, 68361, model='OSGB36')
-    >>> (round(lat, 5), round(lon, 5))
+    >>> grid_to_ll(269995, 68361, model='OSGB36', rounding=5)
     (50.5, -3.83333)
 
     >>> # Cranbourne Chase, on the central meridian
-    >>> lat, lon = grid_to_ll(400000, 122350.044, model='OSGB36')
-    >>> (round(lat, 8), round(lon, 8))
+    >>> grid_to_ll(400000, 122350.0439, model='OSGB36')
     (51.0, -2.0)
 
     >>> # The example from the OSGB documentation
@@ -171,7 +169,7 @@ def grid_to_ll(easting, northing=None, model='WGS84', rounding=None):
         ...
     MissingArgumentError: This should have been a tuple: NH 345 213
 
-    You need to do parse_grid first to avoid this of course.
+    You need to do ``parse_grid`` first to avoid this of course.
 
     Finally here is an example of how to use the optional keyword arguments:
 
@@ -378,7 +376,7 @@ def ll_to_grid(lat, lon, model='WGS84', rounding=None):
     is represented by the coordinates of the SW corner of the square that
     encloses it.  So your best strategy is to use the default rounding here,
     and rely on ``osgb.gridder.format_grid`` to do the *correct* rounding down
-    when it formats the coordinates into a grid reference.
+    when it formats the coordinates into a grid reference string.
 
     """
 
