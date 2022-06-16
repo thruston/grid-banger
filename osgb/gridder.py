@@ -725,10 +725,10 @@ def sheet_keys(easting, northing=None, series='ABCHJ'):
     You can pass a tuple as argument if you prefer, so that you can
     call sheet_keys directly with parse_grid
 
-    >>> sheet_keys(parse_grid("SZ294849"))
-    ['A:195', 'A:196', 'B:OL29W', 'C:180']
-    >>> sheet_keys(parse_grid("SZ294849"), series='A')
-    ['A:195', 'A:196']
+    >>> print(' '.join(sheet_keys(parse_grid("SZ294849"))))
+    A:195 A:196 B:OL29W C:180
+    >>> print(' '.join(sheet_keys(parse_grid("SZ294849"), series='A')))
+    A:195 A:196
 
     But we don't call parse_grid automatically for you...
 
