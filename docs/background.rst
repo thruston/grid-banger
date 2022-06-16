@@ -1,4 +1,4 @@
-OSGB - Background and extended description 
+OSGB - Background and extended description
 ==========================================
 
 These notes are part of :py:mod:`osgb`, a Python implementation of
@@ -71,11 +71,11 @@ OSGB36
     The OSGB36 ellipsoid is a revision of work begun by George Airy the
     Astronomer Royal in 1830, when the OS first undertook to make a series of
     maps that covered the entire country.  It provides a good fit for most of
-    the British Isles. 
+    the British Isles.
 
 EDM50
     The European standard ellipsoid is a compromise to get a good fit for most
-    of Western Europe.  This is not used by these modules. 
+    of Western Europe.  This is not used by these modules.
 
 WGS84
     As part of the development of the GPS network by the American military in
@@ -103,7 +103,7 @@ the south-east, in the park.
 
 In these modules the shape used for the projection of latitude and
 longitude onto the grid is WGS84 unless you specifically set it to use
-OSGB36. 
+OSGB36.
 
 The British National Grid and OSTN02 / OSTN15
 ---------------------------------------------
@@ -133,18 +133,18 @@ series of 100km squares, each identified by a pair of letters:  TQ, SU,
 ND, etc.  The grid of the big squares actually used is something like
 this::
 
-                                HP 
-                                HU 
-                             HY 
-                    NA NB NC ND 
+                                HP
+                                HU
+                             HY
+                    NA NB NC ND
                     NF NG NH NJ NK
-                    NL NM NN NO NP 
-                       NR NS NT NU 
+                    NL NM NN NO NP
+                       NR NS NT NU
                        NW NX NY NZ OV
-                          SC SD SE TA 
-                          SH SJ SK TF TG 
-                       SM SN SO SP TL TM 
-                       SR SS ST SU TQ TR 
+                          SC SD SE TA
+                          SH SJ SK TF TG
+                       SM SN SO SP TL TM
+                       SR SS ST SU TQ TR
                     SV SW SX SY SZ TV
 
 SW covers most of Cornwall, TQ London, HU the Shetlands, and there is one
@@ -172,23 +172,24 @@ This system was originally devised for use on top of the OSGB36 model of
 latitude and longitude, so the prime meridian used and the coordinates
 of the true point of origin are all defined in that system.  However as
 part of standardizing on an international GPS system, the OS have
-redefined the grid as a rubber sheet transformation from WGS84. 
+redefined the grid as a rubber sheet transformation from WGS84.
 There is no intrinsic merit to using one model or another, but there's
 an obvious need to be consistent about which one you choose, and with
 the growing ubiquity of GPS systems, it makes sense to standardize on
-WGS84.  
+WGS84.
 
 The grid remains the primary reference system for use with maps, but
-the OS has always also printed a latitude and longitude 'graticule' around the 
-edges of the large scale sheets.  Traditionally these coordinates have been 
-given in the OSGB36 model, but since 2015 the OS has been printing revised 
+the OS has always also printed a latitude and longitude 'graticule' around the
+edges of the large scale sheets.  Traditionally these coordinates have been
+given in the OSGB36 model, but since 2015 the OS has been printing revised
 editions of Explorer and Landranger sheets with WGS84 coordinates instead.
-The legend of my recently purchased copy of Explorer 311 has this paragraph under the 
-heading 'The National Grid Reference System':
+The legend of my recently purchased copy of Explorer 311 has this paragraph under the
+heading 'The National Grid Reference System'.
 
-> Base map constructed on Transverse Mercator Projection, Airy Ellipsoid, OSGB (1936) Datum.
-> Vertical datum mean sea level. The latitude, longitude graticule overlay is on the ETRS89 datum 
-> and is compatible with the WGS84 datum used by satellite navigation devices.
+    Base map constructed on Transverse Mercator Projection, Airy Ellipsoid,
+    OSGB (1936) Datum.  Vertical datum mean sea level. The latitude, longitude
+    graticule overlay is on the ETRS89 datum and is compatible with the WGS84
+    datum used by satellite navigation devices.
 
 If your map does not have the last sentence you can assume that it shows OSGB36
 latitude and longitude.  Of course, this change makes no difference to the grid
@@ -201,26 +202,26 @@ country::
 
     Square                 Easting difference           Northing difference
     --------------------   -------------------------    ------------------
-                 HP                        109                          66        
-              HT HU                    100 106                      59  62        
-        HW HX HY                73  83  93                  51  48  47            
-     NA NB NC ND            61  65  81  89              40  39  38  40            
-     NF NG NH NJ NK         57  68  79  92  99          30  29  28  26  26        
-     NL NM NN NO            56  66  79  91              18  17  15  15            
-        NR NS NT NU             66  77  92 100               3   2   1   0        
-        NW NX NY NZ             70  77  92 103              -9  -8 -10 -13        
-           SC SD SE TA              77  93 104 112             -19 -22 -23 -24    
+                 HP                        109                          66
+              HT HU                    100 106                      59  62
+        HW HX HY                73  83  93                  51  48  47
+     NA NB NC ND            61  65  81  89              40  39  38  40
+     NF NG NH NJ NK         57  68  79  92  99          30  29  28  26  26
+     NL NM NN NO            56  66  79  91              18  17  15  15
+        NR NS NT NU             66  77  92 100               3   2   1   0
+        NW NX NY NZ             70  77  92 103              -9  -8 -10 -13
+           SC SD SE TA              77  93 104 112             -19 -22 -23 -24
            SH SJ SK TF TG           79  91 103 114 124         -35 -34 -35 -38 -40
         SM SN SO SP TL TM       72  80  90 101 113 122     -49 -47 -46 -46 -46 -47
            SS ST SU TQ TR           80  90 101 113 121         -57 -56 -57 -57 -59
-        SW SX SY SZ TV          71  79  90 100 113         -67 -64 -62 -62 -62    
-         
+        SW SX SY SZ TV          71  79  90 100 113         -67 -64 -62 -62 -62
+
 
 The chart above shows the mean difference in each grid square.  A
 positive easting difference means the WGS84 Lat/Lon is to the east of
 OSGB36; a positive northing difference means it is to the north of
 OSGB36.  At a scale of 1:50,000, 124 meters is 2.48 mm, and at 1:25,000
-it is 4.96 mm, so the difference is readily visible if you compare new 
+it is 4.96 mm, so the difference is readily visible if you compare new
 and old editions of the same map sheet.
 
 The transformation from WGS84 to OSGB36 published in 2002 was called OSTN02 and
@@ -240,16 +241,17 @@ a Helmert transformation to get an approximate conversion.  This
 approach is used automatically by these modules for locations that are
 undefined in OSTN15.
 
-Modern GPS receivers can all display coordinates in the OS grid system.
-You just need to set the display units to be 'British National Grid' or
-whatever similar name is used on your unit.  Most units display the
-coordinates as two groups of five digits and a grid square identifier.
-The units are metres within the grid square.  However you should note
-that your consumer GPS unit will **not** have a copy of the whole of
-OSTN15 in it.  To show you an OSGB grid reference, your GPS will be
-using either a Helmert transformation, or an even more approximate
-Molodenksy transformation to translate from the WGS84 coordinates it is
-getting from the satellites.
+Modern GPS receivers can all display coordinates in the OS grid system.  You
+just need to set the display units to be 'British National Grid' or whatever
+similar name is used on your unit.  Most units display the coordinates as two
+groups of five digits and a grid square identifier.  The units are metres
+within the grid square.  You can do the same on your smart phone with an app,
+such as “OS Locate” from the OSGB.  However you should note that your phone or
+your consumer GPS unit will **not** have a copy of the whole of OSTN15 in it.
+To show you an OSGB grid reference, your device will be using either a Helmert
+transformation, or an even more approximate Molodenksy transformation to
+translate from the WGS84 coordinates it is getting from the satellites.  Grid
+references that you read from most consumer devices will +/- 5m at best.
 
 Note that the OSGB (and therefore this module) does not cover the whole
 of the British Isles, nor even the whole of the UK, in particular it
@@ -259,7 +261,7 @@ OSGB "Landranger" 1:50000 series maps.  The coverage of the OSTN02 data
 set was slightly smaller, as the OS did not originally define the model for any
 points more than about 2km off shore.  The main difference in OSTN15 is that
 coverage is extended to the whole rectangle from grid point (0,0) to (700000,1250000),
-although the accuracy far off shore should not be relied on more than about +/- 5m.
+although the accuracy far offshore should not be relied on more than about +/- 5m.
 
 Implementation of OSTN shift data
 ---------------------------------
@@ -277,18 +279,18 @@ corrections gives you an (easting, northing) pair in the British grid.
 
 The distributed data also includes a vertical height correction as part
 of the OSGM15 geoid module, but this is not used in this module, so it
-is omitted from the module in order to save space.  
+is omitted from the module in order to save space.
 
 The table of data supplied by the Ordnance Survey contains 876951 rows with
-entries for each km intersection between (0,0) and (700000, 1250000). 
-It is included in compressed binary form with normalized numbers 
+entries for each km intersection between (0,0) and (700000, 1250000).
+It is included in compressed binary form with normalized numbers
 as data files that are loaded at run time.
 
 Accuracy, uncertainty, and speed
 --------------------------------
 
 This section explores the limits of accuracy and precision you can
-expect from this software.  
+expect from this software.
 
 Accuracy of readings from GPS devices
 .....................................
@@ -304,7 +306,7 @@ tree cover, the exact positions of the satellites relative to you (which
 are constantly changing as the earth rotates), how close you are to
 sources of interference, like buildings or electricity installations,
 not to mention the ambient temperature and the state of your
-rechargeable batteries. 
+rechargeable batteries.
 
 To get really accurate readings you have to invest in some serious
 professional or military grade surveying equipment.
@@ -317,20 +319,22 @@ that are one degree of latitude apart is about 110 km or just under 70
 miles. This is the distance as the crow flies from, say, Swindon to
 Walsall.  So a tenth of a degree is about 11 km or 7 miles, a hundredth
 is just over 1km, 0.001 is about 110m, 0.0001 about 11m and 0.00001 just
-over 1 m.  If you think in minutes, and seconds, then one minute is
+over 1 m.
+
+If you think in minutes and seconds, then one minute is
 about 1840 m (and it's no coincidence that this happens to be
 approximately the same as 1 nautical mile).  One second is a bit over
 30m, 0.1 seconds is about 3 m, and 0.0001 second is about 3mm::
 
-         Degrees              Minutes             Seconds  * LATITUDE *           
-               1 = 110 km         1 = 1.8 km        1 = 30 m  
-             0.1 =  11 km       0.1 = 180 m       0.1 =  3 m   
-            0.01 = 1.1 km      0.01 =  18 m      0.01 = 30 cm 
-           0.001 = 110 m      0.001 =   2 m     0.001 =  3 cm  
-          0.0001 =  11 m     0.0001 = 20 cm    0.0001 =  3 mm  
-         0.00001 = 1.1 m    0.00001 =  2 cm         
-        0.000001 = 11 cm   0.000001 =  2 mm         
-       0.0000001 =  1 cm               
+         Degrees              Minutes             Seconds  * LATITUDE *
+               1 = 110 km         1 = 1.8 km        1 = 30 m
+             0.1 =  11 km       0.1 = 180 m       0.1 =  3 m
+            0.01 = 1.1 km      0.01 =  18 m      0.01 = 30 cm
+           0.001 = 110 m      0.001 =   2 m     0.001 =  3 cm
+          0.0001 =  11 m     0.0001 = 20 cm    0.0001 =  3 mm
+         0.00001 = 1.1 m    0.00001 =  2 cm
+        0.000001 = 11 cm   0.000001 =  2 mm
+       0.0000001 =  1 cm
 
 Degrees of latitude get very slightly longer as you go further north but
 not by much.  In contrast degrees of longitude, which represent the same
@@ -341,13 +345,13 @@ less than 60 km or about 35 miles.  Scaling everything down means that
 the fifth decimal place of a degree of longitude represents about
 60-70cm on the ground::
 
-       Degrees                Minutes            Seconds * LONGITUDE * 
-             1 = 60-70 km         1 = 1.0-1.2 km      1 = 17-20 m 
-           0.1 = 6-7 km         0.1 = 100-120 m     0.1 = 2 m     
-          0.01 = 600-700 m     0.01 = 10-12 m      0.01 = 20 cm   
-         0.001 = 60-70 m      0.001 = 1 m         0.001 = 2 cm    
-        0.0001 = 6-7 m       0.0001 = 10 cm      0.0001 = 2 mm      
-       0.00001 = 60-70 cm   0.00001 = 1 cm             
+       Degrees                Minutes            Seconds * LONGITUDE *
+             1 = 60-70 km         1 = 1.0-1.2 km      1 = 17-20 m
+           0.1 = 6-7 km         0.1 = 100-120 m     0.1 = 2 m
+          0.01 = 600-700 m     0.01 = 10-12 m      0.01 = 20 cm
+         0.001 = 60-70 m      0.001 = 1 m         0.001 = 2 cm
+        0.0001 = 6-7 m       0.0001 = 10 cm      0.0001 = 2 mm
+       0.00001 = 60-70 cm   0.00001 = 1 cm
       0.000001 = 6-7 cm
 
 How accurate are the conversions?
@@ -380,13 +384,13 @@ OSGB test points in both directions.
 Outside the rectangle covered by OSTN15, this module uses the small Helmert
 transformation recommended by the OS.  The OS state that, with the parameters
 they provide, this transformation will be accurate up to about +/-5 metres, in
-the vicinity of the British Isles.  
+the vicinity of the British Isles.
 
 How fast are the conversions?
 .............................
 
 In general the answer to this question is "probably faster than you need", but if
-you have read this far you might be interested in the results of my benchmarking.  
+you have read this far you might be interested in the results of my benchmarking.
 On my old 2011 Mac Mini I get this::
 
     Grid banger bench mark running under CPython 3.7.3 on Darwin-16.7.0-x86_64-i386-64bit
@@ -400,18 +404,18 @@ On the newer 2019 Macbook Pro I get::
     grid_to_ll: 38655/s 0.0259 ms per call
 
 
-Maps 
+Maps
 ----
 
 The map data is described in the API details above, so this section adds
 a bit more background. The first three series included are OS maps:
 
   A
-    OS Landranger maps at 1:50000 scale; 
+    OS Landranger maps at 1:50000 scale;
   B
-    OS Explorer maps at 1:25000; 
+    OS Explorer maps at 1:25000;
   C
-    the old OS One-Inch maps at 1:63360.  
+    the old OS One-Inch maps at 1:63360.
 
 Landranger sheet 47 appears in the list of keys as ``A:47``, Explorer
 sheet 161 as ``B:161``, and so on.  As of 2015, the Explorer series of
@@ -444,7 +448,7 @@ an inset on Explorer sheet 292 and this is labelled ``B:292.a``.  Where
 there is more than one inset on a sheet, they are sorted in descending
 order of size and labelled ``.a``, ``.b`` etc.  On some sheets the insets
 overlap the area of the main sheet, but they are still treated as
-separate map sheets.  
+separate map sheets.
 
 Some maps have marginal extensions to include local features - these are
 simply included in the definition of the main sheets.  There are,
