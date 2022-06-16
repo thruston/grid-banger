@@ -9,6 +9,11 @@ def test_wrong_model():
         _ = osgb.grid_to_ll(428765, 114567, 'EDM50')
 
 
+def test_no_northing():
+    with pytest.raises(osgb.convert.MissingArgumentError):
+        _ = osgb.grid_to_ll(428765, None)
+
+
 def test_junk():
     with pytest.raises(osgb.gridder.GarbageError):
         _ = osgb.parse_grid("This is not a grid ref")

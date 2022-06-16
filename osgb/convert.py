@@ -36,34 +36,16 @@ CONVERGENCE_FACTOR = 0.9996012717
 # Arrays of bytes are handled one way in Python3...
 if sys.version_info > (3, 0):
     OSTN_EE_SHIFTS = array.array('H')
-    try:
-        OSTN_EE_SHIFTS.frombytes(pkgutil.get_data("osgb", "ostn_east_shift_82140"))
-    except TypeError:
-        print("Failed to load OSTN eastings from file", file=sys.stderr)
-        raise
-
+    OSTN_EE_SHIFTS.frombytes(pkgutil.get_data("osgb", "ostn_east_shift_82140"))
     OSTN_NN_SHIFTS = array.array('H')
-    try:
-        OSTN_NN_SHIFTS.frombytes(pkgutil.get_data("osgb", "ostn_north_shift_-84180"))
-    except TypeError:
-        print("Failed to load OSTN northings from file", file=sys.stderr)
-        raise
+    OSTN_NN_SHIFTS.frombytes(pkgutil.get_data("osgb", "ostn_north_shift_-84180"))
 
 # ... and another in Python2
 else:
     OSTN_EE_SHIFTS = array.array(b'H')
-    try:
-        OSTN_EE_SHIFTS.fromstring(pkgutil.get_data("osgb", "ostn_east_shift_82140"))
-    except TypeError:
-        print("Failed to load OSTN eastings from file", file=sys.stderr)
-        raise
-
+    OSTN_EE_SHIFTS.fromstring(pkgutil.get_data("osgb", "ostn_east_shift_82140"))
     OSTN_NN_SHIFTS = array.array(b'H')
-    try:
-        OSTN_NN_SHIFTS.fromstring(pkgutil.get_data("osgb", "ostn_north_shift_-84180"))
-    except TypeError:
-        print("Failed to load OSTN northings from file", file=sys.stderr)
-        raise
+    OSTN_NN_SHIFTS.fromstring(pkgutil.get_data("osgb", "ostn_north_shift_-84180"))
 
 OSTN_EE_BASE = 82140
 OSTN_NN_BASE = -84180
@@ -181,6 +163,15 @@ def grid_to_ll(easting, northing=None, model='WGS84', rounding=None):
 
     >>> grid_to_ll((217380, 896060))
     (57.916378, -5.084588)
+
+    But you will get an error if the single argument is anything but a tuple
+
+    >>> grid_to_ll("NH 345 213") # doctest: +IGNORE_EXCEPTION_DETAIL
+    Traceback (most recent call last):
+        ...
+    MissingArgumentError: This should have been a tuple: NH 345 213
+
+    You need to do parse_grid first to avoid this of course.
 
     Finally here is an example of how to use the optional keyword arguments:
 

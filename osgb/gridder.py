@@ -560,7 +560,17 @@ If there's no matching input then a GarbageError error is raised.
 
 
 def _get_easting_northing_from_sheet_reference(possible_map_gr):
-    '''Find a grid reference from a sheet number (with optional local GR)'''
+    '''Find a grid reference from a sheet number (with optional local GR)
+
+    >>> _get_easting_northing_from_sheet_reference('A:195/291849')
+    (429100, 84900)
+
+    >>> _get_easting_northing_from_sheet_reference('A:195/29184')  # doctest: +IGNORE_EXCEPTION_DETAIL
+    Traceback (most recent call last):
+    ...
+    GarbageError: I can't read a grid reference from this -> 29184
+
+    '''
 
     # so lets try to decompose the string version of the input
     ok = re.match(r'^([A-Z]:)?([0-9NEWSOL/]+?)(\.[a-z]+)?(?:[ -/.]([ 0-9]+))?$', possible_map_gr)
@@ -586,7 +596,10 @@ def _get_easting_northing_from_sheet_reference(possible_map_gr):
     northing = s.bbox[0][1]
 
     if numbers is not None:
-        (e, n) = _get_eastings_northings(numbers)
+        try:
+            (e, n) = _get_eastings_northings(numbers)
+        except TypeError:  # in case we get None back
+            raise GarbageError(numbers)
         easting = easting + (e - easting) % MINOR_GRID_SQ_SIZE
         northing = northing + (n - northing) % MINOR_GRID_SQ_SIZE
         if _winding_number(easting, northing, s.polygon) == 0:
@@ -603,6 +616,9 @@ def _get_grid_square_offsets(sq):
 
     >>> _get_grid_square_offsets('TQ 345 452')
     (500000, 100000)
+
+    >>> _get_grid_square_offsets('') is None
+    True
 
     """
 
@@ -652,7 +668,7 @@ def _get_eastings_northings(s):
     return (int(e) * 10 ** (5 - figs), int(n) * 10 ** (5 - figs))
 
 
-def sheet_keys(easting, northing, series='ABCHJ'):
+def sheet_keys(easting, northing=None, series='ABCHJ'):
     """Return a list of map sheet keys that show the (easting, northing)
     point given.
 
@@ -706,7 +722,25 @@ def sheet_keys(easting, northing, series='ABCHJ'):
     >>> sheet_keys(0, 0)
     []
 
+    You can pass a tuple as argument if you prefer, so that you can
+    call sheet_keys directly with parse_grid
+
+    >>> sheet_keys(parse_grid("SZ294849"))
+    ['A:195', 'A:196', 'B:OL29W', 'C:180']
+    >>> sheet_keys(parse_grid("SZ294849"), series='A')
+    ['A:195', 'A:196']
+
+    But we don't call parse_grid automatically for you...
+
+    >>> sheet_keys("SZ294849")
+    []
+
     """
+    if northing is None:
+        if type(easting) is tuple:
+            (easting, northing) = easting
+        else:
+            return []
 
     sheets = list()
     for (k, m) in map_locker.items():
@@ -719,8 +753,3 @@ def sheet_keys(easting, northing, series='ABCHJ'):
                     sheets.append(k)
 
     return sorted(sheets)
-
-
-if __name__ == "__main__":
-    import doctest
-    doctest.testmod()
