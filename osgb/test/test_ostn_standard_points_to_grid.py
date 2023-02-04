@@ -6,10 +6,11 @@ which are rounded to the nearest mm, so should match exactly.
 
 Toby Thurston -- 23 Jan 2018
 """
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 import argparse
 import csv
+
 import osgb
 
 test_input = dict()

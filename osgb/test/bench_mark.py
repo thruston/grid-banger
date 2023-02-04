@@ -1,5 +1,5 @@
-import timeit
 import platform
+import timeit
 
 n = 10
 

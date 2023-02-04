@@ -6,7 +6,7 @@ with an error of less that 0.02 mm
 
 Toby Thurston -- 22 Jan 2018
 """
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 import argparse
 import csv

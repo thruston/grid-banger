@@ -4,7 +4,7 @@
 This module provides functions to parse and format grid references, and
 to tell you which maps include a given reference.
 """
-from __future__ import unicode_literals, print_function, division
+from __future__ import division, print_function, unicode_literals
 
 import ast
 import collections

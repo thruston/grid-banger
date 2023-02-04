@@ -1,5 +1,5 @@
 '''Print a map of the National Grid, optionally with an index of OS maps'''
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 import argparse
 import math

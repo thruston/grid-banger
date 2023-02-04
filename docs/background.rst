@@ -391,6 +391,7 @@ How fast are the conversions?
 
 In general the answer to this question is "probably faster than you need", but if
 you have read this far you might be interested in the results of my benchmarking.
+The bench marking script is included with the module tests.
 On my old 2011 Mac Mini I get this::
 
     Grid banger bench mark running under CPython 3.7.3 on Darwin-16.7.0-x86_64-i386-64bit
@@ -403,6 +404,11 @@ On the newer 2019 Macbook Pro I get::
     ll_to_grid: 135829/s 0.00736 ms per call
     grid_to_ll: 38655/s 0.0259 ms per call
 
+and Python 3.11 on the same machine gives a further boost::
+
+    Grid banger bench mark running under CPython 3.11.1 on macOS-13.1-x86_64-i386-64bit
+    ll_to_grid: 169020/s 0.00592 ms per call
+    grid_to_ll: 43709/s 0.0229 ms per call
 
 Maps
 ----
