@@ -315,6 +315,14 @@ def format_grid(easting, northing=None, form='SS EEE NNN'):
     ...
     FarFarAwayError: The spot with coordinates (-1e+12, -5) is too far from the OSGB grid
 
+    You can also supply the easting and northing arguments as a single tuple, which is
+    more convenient if you happen to have the grid reference stored in a variable.
+
+    >>> gr = (460003, 180542)
+    >>> print(format_grid(gr))
+    SU 600 805
+    >>> print(format_grid(gr, form='GPS'))
+    SU 60003 80542
 
     """
     if northing is None:

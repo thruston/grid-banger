@@ -13,6 +13,7 @@ def _calculations(name):
     try:
         assert n == calculated_n
     except AssertionError:
+        print(name, 'a and b:', a, b)
         print(name, 'defined n is:', n)
         print(name, 'calculated n:', calculated_n)
         ok = False
@@ -20,6 +21,7 @@ def _calculations(name):
     try:
         assert e == calculated_e
     except AssertionError:
+        print(name, 'a and b:', a, b)
         print(name, 'defined e is:', e)
         print(name, 'calculated e:', calculated_e)
         ok = False

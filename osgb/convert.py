@@ -15,13 +15,16 @@ import sys
 __all__ = ['grid_to_ll', 'll_to_grid']
 
 # The ellipsoid models for projection to and from the grid
-# each line has a, b, n, ee
+# each line has a, b, nu, ee
 # - a, b are the semi-major and semi-minor axes of the models
-# - n = (a-b)/(a+b)
+# - nu = (a-b)/(a+b)
 # - ee = 1-(b/a)**2
+# In each case the values for a and b are taken from the OS paper
+# "A Guide to Coordinate Systems in Great Britain, V3.6
+# test/test_constants.py check the calculated values
 
 ELLIPSOID_MODELS = {
-    'WGS84': (6378137.000, 6356752.31424518, 0.0016792203863836474, 0.006694379990141108),
+    'WGS84': (6378137.000, 6356752.3141, 0.0016792203978029802, 0.006694380035512815),
     'OSGB36': (6377563.396, 6356256.909, 0.0016732203289874942, 0.006670540074149134),
 }
 
@@ -488,9 +491,8 @@ def _reverse_project_onto_ellipsoid(easting, northing, model):
 
     '''
 
-    _, _, _, e2 = ELLIPSOID_MODELS[model]
-
-    af = CONVERGENCE_FACTOR * ELLIPSOID_MODELS[model][0]
+    e2 = ELLIPSOID_MODELS[model][3]
+    af = ELLIPSOID_MODELS[model][0] * CONVERGENCE_FACTOR
 
     dn = northing - ORIGIN_NORTHING
     de = easting - ORIGIN_EASTING
@@ -674,8 +676,8 @@ def _llh_to_cartesian(lat, lon, H, model):
     Used as part of the Helmert transformation used outside the OSTN02
     area.
 
-    >>> _llh_to_cartesian(53, -3, 10, 'OSGB36')
-    (3841039.2016489906, -201300.3346975291, 5070178.453880735)
+    >>> tuple(round(x, 8) for x in _llh_to_cartesian(53, -3, 10, 'OSGB36'))
+    (3841039.20164899, -201300.33469753, 5070178.45388073)
 
     >>> (x, y, z) =  _llh_to_cartesian(52, 1, 30, 'WGS84')
     >>> tuple(round(x, 8) for x in _cartesian_to_llh(x, y, z, 'WGS84'))
@@ -723,7 +725,8 @@ def _cartesian_to_llh(x, y, z, model):
     Used as part of the Helmert transformation used outside the OSTN02
     area.
 
-    >>> _cartesian_to_llh(3841039.2016489909, -201300.3346975291, 5070178.453880735, 'OSGB36')
+    >>> t = _cartesian_to_llh(3841039.2016489909, -201300.3346975291, 5070178.453880735, 'OSGB36')
+    >>> tuple(round(x, 8) for x in t)
     (53.0, -3.0, 10.0)
     '''
 
@@ -775,8 +778,8 @@ def _shift_ll_from_osgb36_to_wgs84(lat, lon):
 
     Used as a last resort by grid_to_ll
 
-    >>> _shift_ll_from_osgb36_to_wgs84(52, -2)
-    (52.0004248559296, -2.0014104687899463)
+    >>> tuple(round(x, 9) for x in _shift_ll_from_osgb36_to_wgs84(52, -2))
+    (52.000424857, -2.001410469)
     '''
     (xa, ya, za) = _llh_to_cartesian(lat, lon, 0, 'OSGB36')
     (xb, yb, zb) = _small_Helmert_transform_for_OSGB(-1, xa, ya, za)
@@ -788,7 +791,7 @@ def _shift_ll_from_wgs84_to_osgb36(lat, lon):
     '''Approximate conversion of WGS84 spherical coordinates to OSGB36.
 
     Used as a last resort by ll_to_grid
-    >>> tuple(round(x, 7) for x in _shift_ll_from_wgs84_to_osgb36(52.0004248559296, -2.0014104687899463))
+    >>> tuple(round(x, 7) for x in _shift_ll_from_wgs84_to_osgb36(52.000424857, -2.001410469))
     (52.0, -2.0)
     '''
     (xa, ya, za) = _llh_to_cartesian(lat, lon, 0, 'WGS84')
