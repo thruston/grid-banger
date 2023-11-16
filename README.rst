@@ -9,7 +9,7 @@ osgb
 
 Python routines for working with grid references as defined by the Ordnance Survey of Great Britain (OSGB).
 
-Toby Thurston -- June 2022
+Toby Thurston -- November 2023
 
 The functions in this module convert from OSGB grid references to and from GPS
 Latitude and Longitude, using formulae, and the OSTN15 data set, supplied by
@@ -26,11 +26,12 @@ called OSTN15. This dataset is freely available for public use, but
 remains (c) Crown copyright, Ordnance Survey and the Ministry of Defence
 (MOD) 2016. All rights reserved.
 
-The modules are designed to work with Python 2.7 and with Python 3.5 or better.
-When I last checked they were very slightly faster with Python 2.7 than with
-Python 3.6, but the functions are, and the results should be, identical.  If
-you are still using Python 2, then use ``python2`` (or whatever you call it)
-instead of ``python3`` below.
+The modules were designed to work with Python 2.7 and with Python 3.5 or newer,
+but they are now only tested on Python versions 3.7 and newer.  When I last
+checked they were very slightly faster with Python 2.7 than with Python 3.6,
+but the functions are, and the results should be, identical.  If you are still
+using Python 2, then use ``python2`` (or whatever you call it) instead of
+``python3`` below.
 
 install
 -------
@@ -132,7 +133,7 @@ The two PDF files included are examples of the output.
 
 4. The script called ``zero-points.py`` prints out a list of all the "meeting of myriad" points
    in the UK that are on an OSGB map.  These are the points with grid references that are all zeros
-   like NJ000000 (just above Loch Echtachan) or OV000000 (Beast Cliff).  If you plan on visiting them 
+   like NJ000000 (just above Loch Echtachan) or OV000000 (Beast Cliff).  If you plan on visiting them
    all, beware that you will need a boat for some of them.
 
 

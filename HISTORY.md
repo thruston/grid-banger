@@ -32,4 +32,4 @@ The change history for osgb
 
 ## 2.0.0 (future plans)
 
-- The next release will drop support for Python2
+- The next major release will drop support for Python2
